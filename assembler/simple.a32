@@ -1,0 +1,17 @@
+; Addresses for I/O
+.NAME IOBASE= 0xF0000000
+.NAME	OFSHEX= 0x00000000
+.NAME	OFSLEDR=0x00000004
+.NAME	OFSLEDG=0x00000008
+.NAME	OFSKEY =0x00000010
+.NAME	SW     =0x00000014
+
+
+	.ORIG 0x40
+	add	s2,s0,s1 ;remove this comment
+	; Our FP register will be zero
+	xor		fp,fp,fp ;definitely remove this comment
+	; Prepare the gp register
+	
+
+
