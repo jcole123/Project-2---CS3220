@@ -55,7 +55,7 @@ public class assembler {
 		FileReader base = new FileReader(fileName);
 		BufferedReader br = new BufferedReader(base);
 		FileWriter out = new FileWriter("output.txt");
-		String s, first;
+		String s;
 		String count;
 		out.write(header);
 		while((s = br.readLine()) != null) {
@@ -65,11 +65,6 @@ public class assembler {
 			//remove any comments
 			if(comment != -1) 
 				s = s.substring(0,comment);
-			//Get first word.
-			if(s.contains(" ")) {
-				first = s.substring(0, s.indexOf(" "));
-			}
-			else first = null;
 			s = s + "\n";
 			if(s.charAt(0) != ';' && s.charAt(0) != '.' && s.length() >2 ) {
 				String temp = translate(s);
