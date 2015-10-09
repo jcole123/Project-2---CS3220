@@ -154,7 +154,7 @@ public class assembler {
 			String rs2 = Integer.toHexString(registers.get(args[2]));
 			translation = rd + rs1 + rs2 + zero + opcode + "\n";
 		}
-		if(registers.get(args[2]) == null){
+		else {
             int imm = Integer.parseInt(args[2]);
             translation = rd + rs1 + String.format("%04X", imm) + opcode + "\n";
 		}
