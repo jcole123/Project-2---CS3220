@@ -11,6 +11,9 @@ public class assembler {
 	String header = "WIDTH=32;\nDEPTH=2048;\nADDRESS_RADIX=HEX;\nDATA_RADIX=HEX;\nCONTENT BEGIN\n";
 	static HashMap<String,Integer> table;
 	static HashMap<String,Integer> registers;
+	//Hold label address values
+	//TODO: Iterate through assembly and store label values before translation
+	HashMap<String,Integer> labels = new HashMap<String,Integer>;
 	public static void main (String[] args) {
 		assembler test = new assembler();
 		init();
