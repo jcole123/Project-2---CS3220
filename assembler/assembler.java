@@ -4,7 +4,7 @@ import java.io.*;
 
 /*
  * TODO: Handle lables, .ORIG, .WORD, and .NAME
- * TODO: Support to immediate and instructions pertaining to them
+ * TODO: Support immediate instructions 
  * Enter filename as argument: Ex. java assembler simple.a32
  */ 
 public class assembler {
@@ -42,10 +42,54 @@ public class assembler {
 		table.put("NAND",0xc0); 
 		table.put("NOR", 0xd0);
 		table.put("XNOR", 0xe0);
-		//CMP-R
+		//ALU-I
+		table.put("ADDI", 0x08);
+		table.put("SUBI", 0x18);
+		table.put("ANDI", 0x48);
+		table.put("ORI", 0x58);
+		table.put("XORI", 0x68);
+		table.put("NANDI", 0xc8);
+		table.put("NORI", 0xd8);
+		table.put("XNORI", 0xe8);
+		table.put("MVHI", 0xb8);
+		//Load/Store
 		table.put("SW", 0x05);
 		table.put("LW", 0x09);
+		//CMP-R
+		table.put("F", 0x02);
+		table.put("EQ", 0x12);
+		table.put("LT", 0x22);
+		table.put("LTE", 0x32);
+		table.put("T", 0x82);
+		table.put("NE", 0x92);
+		table.put("GTE", 0xa2);
+		table.put("GT", 0xb2);
+		//CMP-I
+		table.put("FI", 0x0a);
+		table.put("EQI", 0x1a);
+		table.put("LTI", 0x2a);
+		table.put("LTEI", 0x3a);
+		table.put("TI", 0x8a);
+		table.put("NEI", 0x9a);
+		table.put("GTEI", 0xaa);
+		table.put("GTI", 0xba);
+		//BRANCH
+		table.put("BF", 0x06);
 		table.put("BEQ", 0x16);
+		table.put("BLT", 0x26);
+		table.put("BLTE", 0x36);
+		table.put("BEQZ", 0x56);
+		table.put("BLTZ", 0x66);
+		table.put("BLTEZ", 0x76);
+		table.put("BT", 0x86);
+		table.put("BNE", 0x96);
+		table.put("BGTE", 0xa6);
+		table.put("BGT", 0xb6);
+		table.put("BNEZ", 0xd6);
+		table.put("BGTEZ", 0xe6);
+		table.put("BGTZ", 0xf6);
+		table.put("JAL", 0x0b);
+		//TODO: Pseudo ops
 		 
 	}
 	public void readFile(String fileName) { 
@@ -54,7 +98,7 @@ public class assembler {
 		try {
 		FileReader base = new FileReader(fileName);
 		BufferedReader br = new BufferedReader(base);
-		FileWriter out = new FileWriter("output.txt");
+		FileWriter out = new FileWriter(fileName.substring(0,fileName.indexOf(".")) + ".mif");
 		String s;
 		String count;
 		out.write(header);
