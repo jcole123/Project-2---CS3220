@@ -13,7 +13,7 @@ public class assembler {
 	static HashMap<String,Integer> registers;
 	//Hold label address values
 	//TODO: Iterate through assembly and store label values before translation
-	HashMap<String,Integer> labels = new HashMap<String,Integer>;
+	HashMap<String,Integer> labels = new HashMap<String,Integer>();
 	public static void main (String[] args) {
 		assembler test = new assembler();
 		init();
@@ -133,21 +133,32 @@ public class assembler {
 	 */
 	public String translate(String temp) {
 		String[] args = temp.split(",");
+
+		String translation = "";
 		//should never happen
-		if(args == null) 
+		if(args == null) {
+			System.out.println("error");
 			return "ERROR";
+		}
 		//Split op and first register
 		String[] operation = args[0].split("\\s+");
 		//remove whitespace so string can be processed in hashmap
-		args[2] = args[2].trim();
+		for(int i = 0; i < args.length; i++)
+			args[i] = args[i].trim();
 		String rd = Integer.toHexString(registers.get(operation[1]));
 		String rs1 = Integer.toHexString(registers.get(args[1]));
-		String rs2 = Integer.toHexString(registers.get(args[2]));
+        String opcode = String.format("%02X", table.get(operation[0]));
 		//Padding
-		String zero = "000"; //12 bits
-		String opcode = String.format("%02X", table.get(operation[0]));
-		
-		return rd + rs1 + rs2 + zero + opcode + "\n";
+        String zero = "000"; //12 bits
+        if(registers.get(args[2]) != null) {
+			String rs2 = Integer.toHexString(registers.get(args[2]));
+			translation = rd + rs1 + rs2 + zero + opcode + "\n";
+		}
+		if(registers.get(args[2]) == null){
+            int imm = Integer.parseInt(args[2]);
+            translation = rd + rs1 + String.format("%04X", imm) + opcode + "\n";
+		}
+		return translation;
 	}
 	
 }

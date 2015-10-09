@@ -12,6 +12,7 @@
 	; Our FP register will be zero
 	xor		fp,fp,fp ;definitely remove this comment
 	; Prepare the gp register
+	addi s2, s1, 20
 	
 
 
