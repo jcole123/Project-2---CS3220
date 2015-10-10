@@ -49,7 +49,7 @@ public class Assembler {
 		ALU_R.put("NAND", 0xc0);
 		ALU_R.put("NOR", 0xd0);
 		ALU_R.put("XNOR", 0xe0);
-		
+
 		ALU_I.put("ADDI", 0x08);
 		ALU_I.put("SUBI", 0x18);
 		ALU_I.put("ANDI", 0x48);
@@ -58,8 +58,7 @@ public class Assembler {
 		ALU_I.put("NANDI", 0xc8);
 		ALU_I.put("NORI", 0xd8);
 		ALU_I.put("XNORI", 0xe8);
-		ALU_I.put("MVHI", 0xb8);
-		
+
 		LW_SW.put("SW", 0x05);
 		LW_SW.put("LW", 0x09);
 		
@@ -201,7 +200,7 @@ public class Assembler {
 		// TODO: Pseudo ops
 	}
 
-	private void assemble(File input){
+	public void assemble(File input){
 		try {
 			// Read the file
 			List<String> asmCode = readFile(input);
@@ -345,7 +344,7 @@ public class Assembler {
 			if (ALU_R.containsKey(opcode)) {
 				tmp = translate(codeLine);
 			} else if (ALU_I.containsKey(opcode)) {
-				// TODO
+				tmp = String.format("%08x", translateAluI(opcode, params));
 			} else if (LW_SW.containsKey(opcode)) {
 				// TODO
 			} else if (CMP_R.containsKey(opcode)) {
@@ -353,6 +352,8 @@ public class Assembler {
 			} else if (CMP_I.containsKey(opcode)) {
 				// TODO
 			} else if (BRANCH.containsKey(opcode)) {
+				// TODO
+			} else if (opcode.equals("MVHI")){
 				// TODO
 			} else if (opcode.equals(".WORD")) {
 				// TODO
@@ -484,7 +485,7 @@ public class Assembler {
 		// Iterate over each line of code
 		Iterator<String> i = code.listIterator();
 		while (i.hasNext()) {
-			
+
 			String line = i.next();
 
 			origMatcher.reset(line);
@@ -494,14 +495,14 @@ public class Assembler {
 				// If the line is an origin line, set the address to the
 				// requested origin.
 				address = parseLiteral(origMatcher.group(1));
-				
+
 			} else if (labelMatcher.matches()) {
 				// If the address is a label, add the label and the current
 				// address to the label map. Furthermore, remove the label
 				// declaration from the source list.
 				labels.put(labelMatcher.group(1), address);
 				i.remove();
-				
+
 			} else {
 				// If the line is an instruction, increment the address as
 				// required.
@@ -509,7 +510,61 @@ public class Assembler {
 			}
 		}
 	}
-	
+
+	/**
+	 * Translates all ALU-I instructions except MVHI into its corresponding
+	 * bytecode.
+	 * 
+	 * @param opcode
+	 *            The instruction's name, as a String
+	 * @param params
+	 *            The comma separated instruction parameters
+	 * @return The instruction's bytecode, as a 32-bit integer
+	 */
+	public int translateAluI(String opcode, String params) {
+		String[] paramArray = params.split(",");
+
+		// Check the number of parameters
+		if (paramArray.length != 3) {
+			throw new IllegalArgumentException("The instruction " + opcode + " " + params + " is illegal");
+		}
+		
+		// Validate the register names
+		if (!REGISTER.containsKey(paramArray[0]) || !REGISTER.containsKey(paramArray[1])) {
+			throw new IllegalArgumentException("The instruction " + opcode + " " + params + " is illegal");
+		}
+		
+		// Parse the immediate
+		int immediate = 0;
+		try {
+			// Try to parse the immediate as a number
+			immediate = parseLiteral(paramArray[2]);
+		} catch (NumberFormatException e) {
+			if (labels.containsKey(paramArray[2])) {
+				//If that fails, try to parse it as a label
+				immediate = labels.get(paramArray[2]);
+			}else{
+				throw new IllegalArgumentException("The label " + paramArray[2] + " cannot be found");
+			}
+		}
+		
+		int compiledLine = 0;
+		
+		// Add the opcode
+		compiledLine |= ALU_I.get(opcode);
+		
+		// Add the destination register
+		compiledLine |= REGISTER.get(paramArray[0]) << 28;
+		
+		// Add the source register
+		compiledLine |= REGISTER.get(paramArray[1]) << 24;
+		
+		//Add the immediate
+		compiledLine |= (immediate & 0xFFFF) << 8;
+		
+		return compiledLine;
+	}
+
 	public void readFile(String fileName) {
 		int line = 16;
 		int comment;
