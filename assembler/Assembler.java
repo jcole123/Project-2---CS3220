@@ -33,6 +33,71 @@ public class Assembler {
 	static HashMap<String, Integer> registers;
 
 	private HashMap<String, Integer> labels = new HashMap<String, Integer>();
+	
+	private static final Map<String, Integer> ALU_R = new HashMap<>();
+	private static final Map<String, Integer> ALU_I = new HashMap<>();
+	private static final Map<String, Integer> LW_SW = new HashMap<>();
+	private static final Map<String, Integer> CMP_R = new HashMap<>();
+	private static final Map<String, Integer> CMP_I = new HashMap<>();
+	private static final Map<String, Integer> BRANCH = new HashMap<>();
+	
+	static {
+		ALU_R.put("AND", 0x40);
+		ALU_R.put("XOR", 0x60);
+		ALU_R.put("ADD", 0x00);
+		ALU_R.put("SUB", 0x10);
+		ALU_R.put("OR", 0x50);
+		ALU_R.put("NAND", 0xc0);
+		ALU_R.put("NOR", 0xd0);
+		ALU_R.put("XNOR", 0xe0);
+		
+		ALU_I.put("ADDI", 0x08);
+		ALU_I.put("SUBI", 0x18);
+		ALU_I.put("ANDI", 0x48);
+		ALU_I.put("ORI", 0x58);
+		ALU_I.put("XORI", 0x68);
+		ALU_I.put("NANDI", 0xc8);
+		ALU_I.put("NORI", 0xd8);
+		ALU_I.put("XNORI", 0xe8);
+		ALU_I.put("MVHI", 0xb8);
+		
+		LW_SW.put("SW", 0x05);
+		LW_SW.put("LW", 0x09);
+		
+		CMP_R.put("F", 0x02);
+		CMP_R.put("EQ", 0x12);
+		CMP_R.put("LT", 0x22);
+		CMP_R.put("LTE", 0x32);
+		CMP_R.put("T", 0x82);
+		CMP_R.put("NE", 0x92);
+		CMP_R.put("GTE", 0xa2);
+		CMP_R.put("GT", 0xb2);
+		
+		CMP_I.put("FI", 0x0a);
+		CMP_I.put("EQI", 0x1a);
+		CMP_I.put("LTI", 0x2a);
+		CMP_I.put("LTEI", 0x3a);
+		CMP_I.put("TI", 0x8a);
+		CMP_I.put("NEI", 0x9a);
+		CMP_I.put("GTEI", 0xaa);
+		CMP_I.put("GTI", 0xba);
+		
+		BRANCH.put("BF", 0x06);
+		BRANCH.put("BEQ", 0x16);
+		BRANCH.put("BLT", 0x26);
+		BRANCH.put("BLTE", 0x36);
+		BRANCH.put("BEQZ", 0x56);
+		BRANCH.put("BLTZ", 0x66);
+		BRANCH.put("BLTEZ", 0x76);
+		BRANCH.put("BT", 0x86);
+		BRANCH.put("BNE", 0x96);
+		BRANCH.put("BGTE", 0xa6);
+		BRANCH.put("BGT", 0xb6);
+		BRANCH.put("BNEZ", 0xd6);
+		BRANCH.put("BGTEZ", 0xe6);
+		BRANCH.put("BGTZ", 0xf6);
+		BRANCH.put("JAL", 0x0b);
+	}
 
 	public static void main(String[] args) {
 
@@ -140,14 +205,16 @@ public class Assembler {
 			List<String> asmCode = readFile(input);
 			
 			// Parse the .NAME lines into a new list
-			List<String> nameCode = asmCode.stream().filter(l -> l.startsWith(".NAME")).collect(Collectors.toList());
-			asmCode.removeIf(l -> l.startsWith(".NAME"));
-			parseNames(nameCode);
+			parseNames(asmCode);
+			
+			// Replace any pseudocodes with their equivalents
+			replacePseudoCodes(asmCode);
 
-			// Parse any labels into the labels map and the .origin keywords by
-			// shifting addresses
-			asmCode = parseLabels(asmCode);
-
+			// Parse any labels into the labels map
+			parseLabels(asmCode);
+			
+			// Translate the code
+			translateCode(asmCode);
 			
 			// Debug statements
 			asmCode.forEach(l->System.out.println(l));
@@ -161,6 +228,126 @@ public class Assembler {
 		} catch (IOException e) {
 			System.err.println("The file " + input.getName() + " could not be read.");
 		}
+	}
+	
+	/**
+	 * Iterates through the list, replacing any pseudocodes with its
+	 * corresponding instruction
+	 * 
+	 * @param code The input code
+	 */
+	private void replacePseudoCodes(List<String> code) {
+		ListIterator<String> i = code.listIterator();
+
+		Pattern patternBR = Pattern.compile("BR (\\w++)");
+		Pattern patternNOT = Pattern.compile("NOT (\\w++),(\\w++)");
+		Pattern patternBLE = Pattern.compile("BLE (\\w++),(\\w++),(\\w++)");
+		Pattern patternBGE = Pattern.compile("BGE (\\w++),(\\w++),(\\w++)");
+		Pattern patternCALL = Pattern.compile("CALL (\\w++\\(\\w++\\))");
+		Pattern patternJMP = Pattern.compile("JMP (\\w++\\(\\w++\\))");
+
+		Matcher matcherBR = patternBR.matcher("");
+		Matcher matcherNOT = patternNOT.matcher("");
+		Matcher matcherBLE = patternBLE.matcher("");
+		Matcher matcherBGE = patternBGE.matcher("");
+		Matcher matcherCALL = patternCALL.matcher("");
+		Matcher matcherJMP = patternJMP.matcher("");
+
+		while (i.hasNext()) {
+			String instruction = i.next();
+
+			String opcode = instruction.replaceAll(" .++\\Z", "");
+			switch (opcode) {
+			case "BR":
+				matcherBR.reset(instruction);
+				if (!matcherBR.matches())
+					throw new IllegalArgumentException("The instruction " + instruction + " is invalid");
+				i.set("BEQ R6,R6," + matcherBR.group(1));
+				break;
+			case "NOT":
+				matcherNOT.reset(instruction);
+				if (!matcherNOT.matches())
+					throw new IllegalArgumentException("The instruction " + instruction + " is invalid");
+				i.set("NAND " + matcherNOT.group(1) + "," + matcherNOT.group(2) + "," + matcherNOT.group(2));
+				break;
+			case "BLE":
+				matcherBLE.reset(instruction);
+				if (!matcherBLE.matches())
+					throw new IllegalArgumentException("The instruction " + instruction + " is invalid");
+				i.set("LTE R6," + matcherBLE.group(1) + "," + matcherBLE.group(2));
+				i.add("BNEZ R6," + matcherBLE.group(3));
+				break;
+			case "BGE":
+				matcherBGE.reset(instruction);
+				if (!matcherBGE.matches())
+					throw new IllegalArgumentException("The instruction " + instruction + " is invalid");
+				i.set("GTE R6," + matcherBGE.group(1) + "," + matcherBGE.group(2));
+				i.add("BNEZ R6," + matcherBGE.group(3));
+				break;
+			case "CALL":
+				matcherCALL.reset(instruction);
+				if (!matcherCALL.matches())
+					throw new IllegalArgumentException("The instruction " + instruction + " is invalid");
+				i.set("JAL RA," + matcherCALL.group(1));
+				break;
+			case "RET":
+				i.set("JAL R9,0(RA)");
+				break;
+			case "JMP":
+				matcherJMP.reset(instruction);
+				if (!matcherJMP.matches())
+					throw new IllegalArgumentException("The instruction " + instruction + " is invalid");
+				i.set("JAL R9," + matcherJMP.group(1));
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Transforms the code from assembly instructions to the binary code
+	 * 
+	 * @param code
+	 *            The source assembly code.
+	 */
+	private List<String> translateCode(List<String> code){
+		Pattern origPattern = Pattern.compile(".ORIG (.++)");		
+		Matcher origMatcher = origPattern.matcher("");
+		
+		List<String> compiledCode = new ArrayList<>();
+		
+		int address = 0;
+		
+		for (String codeLine : code) {
+			
+			// Handle .ORIG tags separately
+			origMatcher.reset(codeLine);
+			if (origMatcher.matches()) {
+				// Parse the address
+				address = parseLiteral(origMatcher.group(1));
+				continue;
+			}			
+			
+			String opcode = codeLine.replaceAll(" .++\\Z", "");
+			
+			if (ALU_R.containsKey(opcode)) {
+
+			} else if (ALU_I.containsKey(opcode)) {
+
+			} else if (LW_SW.containsKey(opcode)) {
+
+			} else if (CMP_R.containsKey(opcode)) {
+
+			} else if (CMP_I.containsKey(opcode)) {
+
+			} else if (BRANCH.containsKey(opcode)) {
+
+			} else {
+				throw new UnsupportedOperationException("The opcode " + opcode + " is not supported");
+			}
+		}
+		return compiledCode;		
 	}
 	
 	/**
@@ -196,28 +383,30 @@ public class Assembler {
 
 	/**
 	 * Parses a list of .NAME strings, adding the relevant entries to the
-	 * reference Map.
+	 * reference Map and removing them from the source list.
 	 * 
-	 * @param names
-	 *            A list of .NAME strings
+	 * @param code
+	 *            The source code, with the .NAME declaration
 	 */
-	private void parseNames(List<String> names){
+	private void parseNames(List<String> code) {
 		Pattern pattern = Pattern.compile(".NAME ([^=]++)=([^=]++)");
 		Matcher matcher = pattern.matcher("");
-		
-		for (String name : names) {
-			matcher.reset(name);
-			
-			// If an invalid input was given, throw.
-			if (!matcher.matches()) throw new IllegalArgumentException("Cannot parse " + name);
-			
+
+		code.removeIf(l -> {
+			matcher.reset(l);
+
+			// Do not remove anything except .NAME statements
+			if (!matcher.matches()) return false;
+
 			String label = matcher.group(1);
 			int value = parseLiteral(matcher.group(2));
-			
+
+			// Add the NAME to the label's map
 			labels.put(label, value);
-		}
+			return true;
+		});
 	}
-	
+
 	/**
 	 * Parses a string into an integer, selecting the correct Radix for the
 	 * conversion as required. Strings are assumed to be decimal unless they are
@@ -254,44 +443,49 @@ public class Assembler {
 	 * lines of code and .origin labels preceding them. Any labels found will be
 	 * added to the label map.
 	 * <p>
-	 * The function will also parse the code, setting which address corresponds
-	 * to each line of code.
+	 * parseLabels will remove any of the label declarations from the source
+	 * list. The origin statements will still be present in the code.
 	 * 
-	 * @param code The input code, with no extra spaces and without any .NAMES lines
-	 * @return
+	 * @param code
+	 *            The input code, with no extra spaces and without any .NAMES
+	 *            lines.
 	 */
-	private List<String> parseLabels(List<String> code){
+	private void parseLabels(List<String> code) {
 		int address = 0;
-		
-		// Create a new list that will only contain address - code pairs
-		List<String> codeList = new ArrayList<>(code.size());
-		
+
 		// Create the required patterns and matchers
 		Pattern origPattern = Pattern.compile(".ORIG (.++)");
 		Pattern labelPattern = Pattern.compile("([^:]++):");
 		Matcher origMatcher = origPattern.matcher("");
 		Matcher labelMatcher = labelPattern.matcher("");
 
-		// Iterate over every line in the code
-		for (String line : code) {
+		// Iterate over each line of code
+		Iterator<String> i = code.listIterator();
+		while (i.hasNext()) {
 			
+			String line = i.next();
+
 			origMatcher.reset(line);
 			labelMatcher.reset(line);
-			
-			if (origMatcher.matches()){
-				// If the line is an origin line, set the address to the requested origin.
+
+			if (origMatcher.matches()) {
+				// If the line is an origin line, set the address to the
+				// requested origin.
 				address = parseLiteral(origMatcher.group(1));
-			} else if (labelMatcher.matches()){
-				// If the address is a label, add the label and the current address to the label map.
+				
+			} else if (labelMatcher.matches()) {
+				// If the address is a label, add the label and the current
+				// address to the label map. Furthermore, remove the label
+				// declaration from the source list.
 				labels.put(labelMatcher.group(1), address);
-			}else{
-				// If the line is a command, return it in the parsed table.
-				codeList.add(String.format("0x%08X", address) + ":" + line);
+				i.remove();
+				
+			} else {
+				// If the line is an instruction, increment the address as
+				// required.
 				address = address + Integer.BYTES;
 			}
 		}
-		
-		return codeList;
 	}
 	
 	public void readFile(String fileName) {
@@ -358,5 +552,4 @@ public class Assembler {
 		}
 		return translation;
 	}
-
 }
