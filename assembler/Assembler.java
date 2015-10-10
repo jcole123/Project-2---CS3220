@@ -32,69 +32,70 @@ public class Assembler {
 
 	private HashMap<String, Integer> labels = new HashMap<String, Integer>();
 	
-	private static final Map<String, Integer> ALU_R = new HashMap<>();
-	private static final Map<String, Integer> ALU_I = new HashMap<>();
+	private static final Map<String, Integer> ALU_CMP_R = new HashMap<>();
+	private static final Map<String, Integer> ALU_CMP_I = new HashMap<>();
 	private static final Map<String, Integer> LW_SW = new HashMap<>();
-	private static final Map<String, Integer> CMP_R = new HashMap<>();
-	private static final Map<String, Integer> CMP_I = new HashMap<>();
-	private static final Map<String, Integer> BRANCH = new HashMap<>();
+	private static final Map<String, Integer> BRANCH_2ARG = new HashMap<>();
+	private static final Map<String, Integer> BRANCH_3ARG = new HashMap<>();
 	private static final HashMap<String, Integer> REGISTER = new HashMap<>();
 	
 	static {
-		ALU_R.put("AND", 0x40);
-		ALU_R.put("XOR", 0x60);
-		ALU_R.put("ADD", 0x00);
-		ALU_R.put("SUB", 0x10);
-		ALU_R.put("OR", 0x50);
-		ALU_R.put("NAND", 0xc0);
-		ALU_R.put("NOR", 0xd0);
-		ALU_R.put("XNOR", 0xe0);
+		ALU_CMP_R.put("AND", 0x40);
+		ALU_CMP_R.put("XOR", 0x60);
+		ALU_CMP_R.put("ADD", 0x00);
+		ALU_CMP_R.put("SUB", 0x10);
+		ALU_CMP_R.put("OR", 0x50);
+		ALU_CMP_R.put("NAND", 0xc0);
+		ALU_CMP_R.put("NOR", 0xd0);
+		ALU_CMP_R.put("XNOR", 0xe0);
 
-		ALU_I.put("ADDI", 0x08);
-		ALU_I.put("SUBI", 0x18);
-		ALU_I.put("ANDI", 0x48);
-		ALU_I.put("ORI", 0x58);
-		ALU_I.put("XORI", 0x68);
-		ALU_I.put("NANDI", 0xc8);
-		ALU_I.put("NORI", 0xd8);
-		ALU_I.put("XNORI", 0xe8);
+		ALU_CMP_I.put("ADDI", 0x08);
+		ALU_CMP_I.put("SUBI", 0x18);
+		ALU_CMP_I.put("ANDI", 0x48);
+		ALU_CMP_I.put("ORI", 0x58);
+		ALU_CMP_I.put("XORI", 0x68);
+		ALU_CMP_I.put("NANDI", 0xc8);
+		ALU_CMP_I.put("NORI", 0xd8);
+		ALU_CMP_I.put("XNORI", 0xe8);
 
 		LW_SW.put("SW", 0x05);
 		LW_SW.put("LW", 0x09);
 		
-		CMP_R.put("F", 0x02);
-		CMP_R.put("EQ", 0x12);
-		CMP_R.put("LT", 0x22);
-		CMP_R.put("LTE", 0x32);
-		CMP_R.put("T", 0x82);
-		CMP_R.put("NE", 0x92);
-		CMP_R.put("GTE", 0xa2);
-		CMP_R.put("GT", 0xb2);
+		ALU_CMP_R.put("F", 0x02);
+		ALU_CMP_R.put("EQ", 0x12);
+		ALU_CMP_R.put("LT", 0x22);
+		ALU_CMP_R.put("LTE", 0x32);
+		ALU_CMP_R.put("T", 0x82);
+		ALU_CMP_R.put("NE", 0x92);
+		ALU_CMP_R.put("GTE", 0xa2);
+		ALU_CMP_R.put("GT", 0xb2);
 		
-		CMP_I.put("FI", 0x0a);
-		CMP_I.put("EQI", 0x1a);
-		CMP_I.put("LTI", 0x2a);
-		CMP_I.put("LTEI", 0x3a);
-		CMP_I.put("TI", 0x8a);
-		CMP_I.put("NEI", 0x9a);
-		CMP_I.put("GTEI", 0xaa);
-		CMP_I.put("GTI", 0xba);
+		ALU_CMP_I.put("FI", 0x0a);
+		ALU_CMP_I.put("EQI", 0x1a);
+		ALU_CMP_I.put("LTI", 0x2a);
+		ALU_CMP_I.put("LTEI", 0x3a);
+		ALU_CMP_I.put("TI", 0x8a);
+		ALU_CMP_I.put("NEI", 0x9a);
+		ALU_CMP_I.put("GTEI", 0xaa);
+		ALU_CMP_I.put("GTI", 0xba);
 		
-		BRANCH.put("BF", 0x06);
-		BRANCH.put("BEQ", 0x16);
-		BRANCH.put("BLT", 0x26);
-		BRANCH.put("BLTE", 0x36);
-		BRANCH.put("BEQZ", 0x56);
-		BRANCH.put("BLTZ", 0x66);
-		BRANCH.put("BLTEZ", 0x76);
-		BRANCH.put("BT", 0x86);
-		BRANCH.put("BNE", 0x96);
-		BRANCH.put("BGTE", 0xa6);
-		BRANCH.put("BGT", 0xb6);
-		BRANCH.put("BNEZ", 0xd6);
-		BRANCH.put("BGTEZ", 0xe6);
-		BRANCH.put("BGTZ", 0xf6);
-		BRANCH.put("JAL", 0x0b);
+		BRANCH_3ARG.put("BF", 0x06);
+		BRANCH_3ARG.put("BEQ", 0x16);
+		BRANCH_3ARG.put("BLT", 0x26);
+		BRANCH_3ARG.put("BLTE", 0x36);
+		
+		BRANCH_3ARG.put("BT", 0x86);
+		BRANCH_3ARG.put("BNE", 0x96);
+		BRANCH_3ARG.put("BGTE", 0xa6);
+		BRANCH_3ARG.put("BGT", 0xb6);
+		
+		BRANCH_2ARG.put("BEQZ", 0x56);
+		BRANCH_2ARG.put("BLTZ", 0x66);
+		BRANCH_2ARG.put("BLTEZ", 0x76);
+		
+		BRANCH_2ARG.put("BNEZ", 0xd6);
+		BRANCH_2ARG.put("BGTEZ", 0xe6);
+		BRANCH_2ARG.put("BGTZ", 0xf6);
 		
 		REGISTER.put("A0", 0);
 		REGISTER.put("A1", 1);
@@ -341,21 +342,21 @@ public class Assembler {
 			
 			String tmp = null;
 
-			if (ALU_R.containsKey(opcode)) {
+			if (ALU_CMP_R.containsKey(opcode)) {
 				tmp = translate(codeLine);
-			} else if (ALU_I.containsKey(opcode)) {
-				tmp = String.format("%08x", translateAluI(opcode, params));
+			} else if (ALU_CMP_I.containsKey(opcode)) {
+				tmp = String.format("%08x", translateAluCmpI(opcode, params));
 			} else if (LW_SW.containsKey(opcode)) {
 				// TODO
-			} else if (CMP_R.containsKey(opcode)) {
-				tmp = translate(codeLine);
-			} else if (CMP_I.containsKey(opcode)) {
-				// TODO
-			} else if (BRANCH.containsKey(opcode)) {
-				// TODO
-			} else if (opcode.equals("MVHI")){
+			} else if (BRANCH_3ARG.containsKey(opcode)) {
+				tmp = String.format("%08x", translateBranch3Arg(opcode, params, address));
+			} else if (BRANCH_2ARG.containsKey(opcode)) {
+				tmp = String.format("%08x", translateBranch2Arg(opcode, params, address));
+			}else if (opcode.equals("MVHI")){
 				// TODO
 			} else if (opcode.equals(".WORD")) {
+				// TODO
+			} else if (opcode.equals("JAL")){
 				// TODO
 			} else {
 				throw new UnsupportedOperationException("The opcode " + opcode + " is not supported");
@@ -512,8 +513,8 @@ public class Assembler {
 	}
 
 	/**
-	 * Translates all ALU-I instructions except MVHI into its corresponding
-	 * bytecode.
+	 * Translates all ALU-I and CMP-I instructions except MVHI into its
+	 * corresponding bytecode.
 	 * 
 	 * @param opcode
 	 *            The instruction's name, as a String
@@ -521,7 +522,7 @@ public class Assembler {
 	 *            The comma separated instruction parameters
 	 * @return The instruction's bytecode, as a 32-bit integer
 	 */
-	public int translateAluI(String opcode, String params) {
+	private int translateAluCmpI(String opcode, String params) {
 		String[] paramArray = params.split(",");
 
 		// Check the number of parameters
@@ -539,19 +540,27 @@ public class Assembler {
 		try {
 			// Try to parse the immediate as a number
 			immediate = parseLiteral(paramArray[2]);
+
+			// Check that the immediate is within bounds
+			if (immediate < Short.MIN_VALUE || immediate > Short.MAX_VALUE) {
+				throw new IllegalArgumentException("The immediate " + paramArray[2] + " is too large.");
+			}
+
 		} catch (NumberFormatException e) {
 			if (labels.containsKey(paramArray[2])) {
-				//If that fails, try to parse it as a label
+				// If that fails, try to parse it as a label
 				immediate = labels.get(paramArray[2]);
-			}else{
+				// The immediate bounds are not checked, for labels the lower 16
+				// bits are used and the rest is truncated.
+			} else {
 				throw new IllegalArgumentException("The label " + paramArray[2] + " cannot be found");
 			}
 		}
-		
+
 		int compiledLine = 0;
 		
 		// Add the opcode
-		compiledLine |= ALU_I.get(opcode);
+		compiledLine |= ALU_CMP_I.get(opcode);
 		
 		// Add the destination register
 		compiledLine |= REGISTER.get(paramArray[0]) << 28;
@@ -564,7 +573,124 @@ public class Assembler {
 		
 		return compiledLine;
 	}
+	
+	/**
+	 * Translates all 3-argument branch statements
+	 * 
+	 * @param opcode
+	 *            The instruction name
+	 * @param params
+	 *            The instruction comma separated parameters
+	 * @param address
+	 *            The instruction's address
+	 * @return The compiled instruction, as a 32-bit integer
+	 */
+	private int translateBranch3Arg(String opcode, String params, int address) {
+		String[] paramArray = params.split(",");
 
+		// Check the number of parameters
+		if (paramArray.length != 3) {
+			throw new IllegalArgumentException("The instruction " + opcode + " " + params + " is illegal");
+		}
+
+		// Validate the register names
+		if (!REGISTER.containsKey(paramArray[0]) || !REGISTER.containsKey(paramArray[1])) {
+			throw new IllegalArgumentException("The instruction " + opcode + " " + params + " is illegal");
+		}
+
+		// Parse the immediate
+		int immediate = 0;
+		try {
+			// Try to parse the immediate as a number
+			immediate = parseLiteral(paramArray[2]);
+		} catch (NumberFormatException e) {
+			if (labels.containsKey(paramArray[2])) {
+				// If that fails, try to parse it as a label
+				immediate = labels.get(paramArray[2]) - address - 4;
+			} else {
+				throw new IllegalArgumentException("The label " + paramArray[2] + " cannot be found");
+			}
+		}
+		
+		// Check that the immediate is within bounds
+		if (immediate < Short.MIN_VALUE || immediate > Short.MAX_VALUE) {
+			throw new IllegalArgumentException("The offset on \"" + opcode + params +"\" is too large");
+		}
+
+		int compiledLine = 0;
+
+		// Add the opcode
+		compiledLine |= BRANCH_3ARG.get(opcode);
+
+		// Add the second register
+		compiledLine |= REGISTER.get(paramArray[1]) << 28;
+
+		// Add the first register
+		compiledLine |= REGISTER.get(paramArray[0]) << 24;
+
+		// Add the immediate
+		compiledLine |= (immediate & 0xFFFF) << 8;
+
+		return compiledLine;
+	}
+	
+	/**
+	 * Translates all 2-argument branch statements
+	 * 
+	 * @param opcode
+	 *            The instruction name
+	 * @param params
+	 *            The comma separated instruction parameters
+	 * @param address
+	 *            The instruction's address
+	 * @return The compiled instruction, as a 32-bit integer
+	 */
+	private int translateBranch2Arg(String opcode, String params, int address){
+		String[] paramArray = params.split(",");
+
+		// Check the number of parameters
+		if (paramArray.length != 2) {
+			throw new IllegalArgumentException("The instruction " + opcode + " " + params + " is illegal");
+		}
+
+		// Validate the register names
+		if (!REGISTER.containsKey(paramArray[0])) {
+			throw new IllegalArgumentException("The instruction " + opcode + " " + params + " is illegal");
+		}
+
+		// Parse the immediate
+		int immediate = 0;
+		try {
+			// Try to parse the immediate as a number
+			immediate = parseLiteral(paramArray[1]);
+		} catch (NumberFormatException e) {
+			if (labels.containsKey(paramArray[1])) {
+				// If that fails, try to parse it as a label
+				immediate = labels.get(paramArray[1]) - address - 4;
+			} else {
+				throw new IllegalArgumentException("The label " + paramArray[1] + " cannot be found");
+			}
+		}
+		
+		// Check that the immediate is within bounds
+		if (immediate < Short.MIN_VALUE || immediate > Short.MAX_VALUE) {
+			throw new IllegalArgumentException("The offset on \"" + opcode + params +"\" is too large");
+		}
+
+		int compiledLine = 0;
+
+		// Add the opcode
+		compiledLine |= BRANCH_2ARG.get(opcode);
+
+		// Add the first register
+		compiledLine |= REGISTER.get(paramArray[0]) << 28;
+
+		// Add the immediate
+		compiledLine |= (immediate & 0xFFFF) << 8;
+
+		return compiledLine;
+	}
+	
 	public void readFile(String fileName) {
 		int line = 16;
 		int comment;
