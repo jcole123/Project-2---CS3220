@@ -1,7 +1,6 @@
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.io.*;
 import java.nio.file.Files;
 
@@ -27,10 +26,9 @@ import java.nio.file.Files;
  * Note that before translating, all pseudocodes need to be replaced with their
  * equivalents. I'll try to get that running tomorrow as well.
  */
-public class Assembler {
+public class Assembler {	
 	String header = "WIDTH=32;\nDEPTH=2048;\nADDRESS_RADIX=HEX;\nDATA_RADIX=HEX;\nCONTENT BEGIN\n";
 	static HashMap<String, Integer> table;
-	static HashMap<String, Integer> registers;
 
 	private HashMap<String, Integer> labels = new HashMap<String, Integer>();
 	
@@ -40,6 +38,7 @@ public class Assembler {
 	private static final Map<String, Integer> CMP_R = new HashMap<>();
 	private static final Map<String, Integer> CMP_I = new HashMap<>();
 	private static final Map<String, Integer> BRANCH = new HashMap<>();
+	private static final HashMap<String, Integer> REGISTER = new HashMap<>();
 	
 	static {
 		ALU_R.put("AND", 0x40);
@@ -97,6 +96,23 @@ public class Assembler {
 		BRANCH.put("BGTEZ", 0xe6);
 		BRANCH.put("BGTZ", 0xf6);
 		BRANCH.put("JAL", 0x0b);
+		
+		REGISTER.put("A0", 0);
+		REGISTER.put("A1", 1);
+		REGISTER.put("A2", 2);
+		REGISTER.put("A3", 3);
+		REGISTER.put("RV", 3);
+		REGISTER.put("T0", 4);
+		REGISTER.put("T1", 5);
+		REGISTER.put("S0", 6);
+		REGISTER.put("S1", 7);
+		REGISTER.put("S2", 8);
+		REGISTER.put("GP", 12);
+		REGISTER.put("FP", 13);
+		REGISTER.put("SP", 14);
+		REGISTER.put("RA", 15);
+		for (int i = 0; i < 16; i++)
+			REGISTER.put("R"+i, i);
 	}
 
 	public static void main(String[] args) {
@@ -113,31 +129,18 @@ public class Assembler {
 		if (!asmFile.exists()) {
 			System.err.println("The file " + args[0] + "does not exist");
 		}
-
+		
+		init();
+		
 		Assembler test = new Assembler();	
 		test.assemble(asmFile);
 		
-		init();
+		
 
 		//test.readFile(args[0]);
 	}
 
 	public static void init() {
-		registers = new HashMap<String, Integer>();
-		registers.put("A0", 0);
-		registers.put("A1", 1);
-		registers.put("A2", 2);
-		registers.put("A3", 3);
-		registers.put("RV", 3);
-		registers.put("T0", 4);
-		registers.put("T1", 5);
-		registers.put("S0", 6);
-		registers.put("S1", 7);
-		registers.put("S2", 8);
-		registers.put("GP", 12);
-		registers.put("FP", 13);
-		registers.put("SP", 14);
-		registers.put("RA", 15);
 		table = new HashMap<String, Integer>();
 		// ALU-R
 		table.put("AND", 0x40);
@@ -196,7 +199,6 @@ public class Assembler {
 		table.put("BGTZ", 0xf6);
 		table.put("JAL", 0x0b);
 		// TODO: Pseudo ops
-
 	}
 
 	private void assemble(File input){
@@ -214,10 +216,10 @@ public class Assembler {
 			parseLabels(asmCode);
 			
 			// Translate the code
-			translateCode(asmCode);
+			List<String> compiledCode = translateCode(asmCode);
 			
 			// Debug statements
-			asmCode.forEach(l->System.out.println(l));
+			compiledCode.forEach(l->System.out.println(l));
 			System.out.println();
 			System.out.println("-----------------------------------");
 			System.out.println("-----------Labels------------------");
@@ -311,44 +313,61 @@ public class Assembler {
 	 * @param code
 	 *            The source assembly code.
 	 */
-	private List<String> translateCode(List<String> code){
-		Pattern origPattern = Pattern.compile(".ORIG (.++)");		
+	private List<String> translateCode(List<String> code) {
+		Pattern origPattern = Pattern.compile(".ORIG (.++)");
 		Matcher origMatcher = origPattern.matcher("");
-		
+
 		List<String> compiledCode = new ArrayList<>();
-		
+
 		int address = 0;
-		
+
 		for (String codeLine : code) {
-			
+
 			// Handle .ORIG tags separately
 			origMatcher.reset(codeLine);
 			if (origMatcher.matches()) {
 				// Parse the address
 				address = parseLiteral(origMatcher.group(1));
 				continue;
-			}			
+			}
 			
-			String opcode = codeLine.replaceAll(" .++\\Z", "");
+			// Divide the code into the opcode and the parameters.
+			String[] tmpArr = codeLine.split(" ", 2);
+			String opcode = tmpArr[0];
+			String params = tmpArr[1];
 			
+			// Add the comment line
+			String comment = String.format("-- @ 0x%08x : %-8s %s", address, opcode, params);
+			compiledCode.add(comment);
+			
+			String tmp = null;
+
 			if (ALU_R.containsKey(opcode)) {
-
+				tmp = translate(codeLine);
 			} else if (ALU_I.containsKey(opcode)) {
-
+				// TODO
 			} else if (LW_SW.containsKey(opcode)) {
-
+				// TODO
 			} else if (CMP_R.containsKey(opcode)) {
-
+				tmp = translate(codeLine);
 			} else if (CMP_I.containsKey(opcode)) {
-
+				// TODO
 			} else if (BRANCH.containsKey(opcode)) {
-
+				// TODO
+			} else if (opcode.equals(".WORD")) {
+				// TODO
 			} else {
 				throw new UnsupportedOperationException("The opcode " + opcode + " is not supported");
 			}
+
+			String compiledLine = String.format("%08x : %s", address >> 2, tmp);
+			compiledCode.add(compiledLine);
+
+			address += Integer.BYTES;
 		}
-		return compiledCode;		
+		return compiledCode;
 	}
+
 	
 	/**
 	 * Reads an assembly file and strips non-essential text. Note that no
@@ -381,6 +400,7 @@ public class Assembler {
 		return text;
 	}
 
+	
 	/**
 	 * Parses a list of .NAME strings, adding the relevant entries to the
 	 * reference Map and removing them from the source list.
@@ -406,6 +426,7 @@ public class Assembler {
 			return true;
 		});
 	}
+
 
 	/**
 	 * Parses a string into an integer, selecting the correct Radix for the
@@ -438,6 +459,7 @@ public class Assembler {
 		}
 	}
 	
+
 	/**
 	 * Calculates the address of any labels in the code based on the number of
 	 * lines of code and .origin labels preceding them. Any labels found will be
@@ -538,17 +560,17 @@ public class Assembler {
 		// remove whitespace so string can be processed in hashmap
 		for (int i = 0; i < args.length; i++)
 			args[i] = args[i].trim();
-		String rd = Integer.toHexString(registers.get(operation[1]));
-		String rs1 = Integer.toHexString(registers.get(args[1]));
+		String rd = Integer.toHexString(REGISTER.get(operation[1]));
+		String rs1 = Integer.toHexString(REGISTER.get(args[1]));
 		String opcode = String.format("%02X", table.get(operation[0]));
 		// Padding
 		String zero = "000"; // 12 bits
-		if (registers.get(args[2]) != null) {
-			String rs2 = Integer.toHexString(registers.get(args[2]));
-			translation = rd + rs1 + rs2 + zero + opcode + "\n";
+		if (REGISTER.get(args[2]) != null) {
+			String rs2 = Integer.toHexString(REGISTER.get(args[2]));
+			translation = rd + rs1 + rs2 + zero + opcode;
 		} else {
 			int imm = Integer.parseInt(args[2]);
-			translation = rd + rs1 + String.format("%04X", imm) + opcode + "\n";
+			translation = rd + rs1 + String.format("%04X", imm) + opcode;
 		}
 		return translation;
 	}
