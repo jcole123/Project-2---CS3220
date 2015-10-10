@@ -5,8 +5,7 @@ import java.io.*;
 import java.nio.file.Files;
 
 /*
- * TODO: Handle  .WORD TODO: Support immediate instructions and fix regular instructions
- *  Enter filename as argument: Ex. java assembler simple.a32
+ *  TODO:SW, LW; 
  */
 
 /*
@@ -17,14 +16,9 @@ import java.nio.file.Files;
  * 
  * I'm using the origin keyword to find the starting address (or jumps). Right
  * now, the code I've written extracts all labels and calculates their
- * appropiate values. See the end of the console printout. I'm also placing
+ * appropriate values. See the end of the console printout. I'm also placing
  * .NAME constants in the same table; that may change if I think it's not going
  * to work.
- * 
- * I'll get the translation working tomorrow.
- * 
- * Note that before translating, all pseudocodes need to be replaced with their
- * equivalents. I'll try to get that running tomorrow as well.
  */
 public class Assembler {	
 	String header = "WIDTH=32;\nDEPTH=2048;\nADDRESS_RADIX=HEX;\nDATA_RADIX=HEX;\nCONTENT BEGIN\n";
@@ -341,28 +335,36 @@ public class Assembler {
 			compiledCode.add(comment);
 			
 			String tmp = null;
+			int byteCode = 0;
 
 			if (ALU_CMP_R.containsKey(opcode)) {
-				tmp = translate(codeLine);
+				tmp = translateAluCmpR(codeLine);
 			} else if (ALU_CMP_I.containsKey(opcode)) {
-				tmp = String.format("%08x", translateAluCmpI(opcode, params));
+				byteCode = translateAluCmpI(opcode, params);
 			} else if (LW_SW.containsKey(opcode)) {
 				// TODO
+				tmp = "";
 			} else if (BRANCH_3ARG.containsKey(opcode)) {
-				tmp = String.format("%08x", translateBranch3Arg(opcode, params, address));
+				byteCode = translateBranch3Arg(opcode, params, address);
 			} else if (BRANCH_2ARG.containsKey(opcode)) {
-				tmp = String.format("%08x", translateBranch2Arg(opcode, params, address));
+				byteCode = translateBranch2Arg(opcode, params, address);
 			}else if (opcode.equals("MVHI")){
-				// TODO
-			} else if (opcode.equals(".WORD")) {
-				// TODO
+				byteCode = translateMVHI(params);
 			} else if (opcode.equals("JAL")){
-				// TODO
+				byteCode = translateJAL(params, address);
+			} else if (opcode.equals(".WORD")) {
+				byteCode = translateWord(params);
 			} else {
 				throw new UnsupportedOperationException("The opcode " + opcode + " is not supported");
 			}
-
-			String compiledLine = String.format("%08x : %s", address >> 2, tmp);
+			
+			String compiledLine;
+			if (tmp == null) {
+				compiledLine = String.format("%08x : %08x", address >> 2, byteCode);
+			}else{
+				compiledLine = String.format("%08x : %s", address >> 2, tmp);
+			}
+			
 			compiledCode.add(compiledLine);
 
 			address += Integer.BYTES;
@@ -691,6 +693,138 @@ public class Assembler {
 		return compiledLine;
 	}
 	
+	/**
+	 * Translates JAL statements
+	 * @param params The comma separated parameters
+	 * @param address The current address
+	 * @return The compiled bytecode
+	 */
+	private int translateJAL(String params, int address){
+		Pattern JalPattern = Pattern.compile("(\\w++),(\\w++)\\((\\w++)\\)");
+		Matcher JalMatcher = JalPattern.matcher(params);
+		
+		// Check the number of parameters
+		if (!JalMatcher.matches()) {
+			throw new IllegalArgumentException("The instruction JAL " + params + " is illegal");
+		}
+
+		// Validate the register names
+		if (!REGISTER.containsKey(JalMatcher.group(1)) || !REGISTER.containsKey(JalMatcher.group(3))) {
+			throw new IllegalArgumentException("The instruction JAL "+ params + " is illegal");
+		}
+
+		// Parse the immediate
+		int immediate = 0;
+		try {
+			// Try to parse the immediate as a number
+			immediate = parseLiteral(JalMatcher.group(2));
+		} catch (NumberFormatException e) {
+			if (labels.containsKey(JalMatcher.group(2))) {
+				// If that fails, try to parse it as a label
+				immediate = labels.get(JalMatcher.group(2)) - address - 4;
+			} else {
+				throw new IllegalArgumentException("The label " + JalMatcher.group(2) + " cannot be found");
+			}
+		}
+		
+		// Check that the immediate is within bounds
+		if (immediate < Short.MIN_VALUE || immediate > Short.MAX_VALUE) {
+			throw new IllegalArgumentException("The offset on \"JAL " + params +"\" is too large");
+		}
+
+		int compiledLine = 0;
+
+		// Add the opcode
+		compiledLine |= 0x0b;
+
+		// Add the second register
+		compiledLine |= REGISTER.get(JalMatcher.group(1)) << 28;
+
+		// Add the first register
+		compiledLine |= REGISTER.get(JalMatcher.group(3)) << 24;
+
+		// Add the immediate
+		compiledLine |= (immediate & 0xFFFF) << 8;
+
+		return compiledLine;
+	}
+	
+	/**
+	 * Translates the MVHI statement
+	 * @param params The comma separated parameters
+	 * @return The corresponding bytecode as a 32 bit integer
+	 */
+	private int translateMVHI(String params){
+		String[] paramArray = params.split(",");
+
+		// Check the number of parameters
+		if (paramArray.length != 2) {
+			throw new IllegalArgumentException("The instruction MVHI " + params + " is illegal");
+		}
+		
+		// Validate the register names
+		if (!REGISTER.containsKey(paramArray[0])) {
+			throw new IllegalArgumentException("The instruction MVHI " + params + " is illegal");
+		}
+		
+		// Parse the immediate
+		int immediate = 0;
+		try {
+			// Try to parse the immediate as a number
+			immediate = parseLiteral(paramArray[1]);
+
+			// Check that the immediate is within bounds
+			if (immediate < Short.MIN_VALUE || immediate > Short.MAX_VALUE) {
+				throw new IllegalArgumentException("The immediate " + paramArray[1] + " is too large.");
+			}
+
+		} catch (NumberFormatException e) {
+			if (labels.containsKey(paramArray[1])) {
+				// If that fails, try to parse it as a label
+				immediate = labels.get(paramArray[1]);
+				// The immediate bounds are not checked, for labels the lower 16
+				// bits are used and the rest is truncated.
+			} else {
+				throw new IllegalArgumentException("The label " + paramArray[1] + " cannot be found");
+			}
+		}
+
+		int compiledLine = 0;
+		
+		// Add the opcode
+		compiledLine |= 0xb8;
+		
+		// Add the destination register
+		compiledLine |= REGISTER.get(paramArray[0]) << 28;
+				
+		//Add the immediate
+		compiledLine |= (immediate & 0xFFFF) << 8;
+		
+		return compiledLine;
+	}
+	
+	/**
+	 * Translates a .WORD statement
+	 * @param param The parameter
+	 * @return The corresponding bytecode
+	 */
+	private int translateWord(String param) {
+		// Parse the bytecode
+		int byteCode;
+		try {
+			// Try to parse the parameter as a number
+			byteCode = parseLiteral(param);
+		} catch (NumberFormatException e) {
+			if (labels.containsKey(param)) {
+				// If that fails, try to parse it as a label
+				byteCode = labels.get(param);
+			} else {
+				throw new IllegalArgumentException("The label " + param + " cannot be found");
+			}
+		}
+		return byteCode;
+	}
+	
 	public void readFile(String fileName) {
 		int line = 16;
 		int comment;
@@ -709,7 +843,7 @@ public class Assembler {
 				if (comment != -1) s = s.substring(0, comment);
 				s = s + "\n";
 				if (s.charAt(0) != ';' && s.charAt(0) != '.' && s.length() > 2) {
-					String temp = translate(s);
+					String temp = translateAluCmpR(s);
 					// System.out.println(temp);
 					out.append("-- @ 0x" + String.format("%08X", line << 2) + " : " + String.format("%-7s", s)
 							+ String.format("%08X", line) + " : " + temp);
@@ -727,7 +861,7 @@ public class Assembler {
 	 * Given a string containing an opcode/registers/imm, convert to string of
 	 * bytes Currently only working for ALU-R and CMP-R
 	 */
-	public String translate(String temp) {
+	public String translateAluCmpR(String temp) {
 		String[] args = temp.split(",");
 
 		String translation = "";
