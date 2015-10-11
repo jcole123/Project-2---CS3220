@@ -10,17 +10,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/*
- * The labels table is now working. The integer has byte-addressed addreses, so
- * they need to be truncated later. I'll do that. I did rewrite a lot of the
- * code you had because, for instance, your loop assumed code began at line 16
- * and that all lines are continuous (no intermediate orig keywords).
+/**
+ * Converts an assembly file into an Altera .mif compatible file.
  * 
- * I'm using the origin keyword to find the starting address (or jumps). Right
- * now, the code I've written extracts all labels and calculates their
- * appropriate values. See the end of the console printout. I'm also placing
- * .NAME constants in the same table; that may change if I think it's not going
- * to work.
+ * @author Michael Chen & Justin Cole
+ *
  */
 public class Assembler {	
 	
