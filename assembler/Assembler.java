@@ -254,7 +254,7 @@ public class Assembler {
 				// If the address is a label, add the label and the current
 				// address to the label map. Furthermore, remove the label
 				// declaration from the source list.
-				labels.put(labelMatcher.group(1), address);
+				labels.put(labelMatcher.group(1), address >> 2);
 				i.remove();
 
 			} else {
@@ -533,7 +533,7 @@ public class Assembler {
 		} catch (NumberFormatException e) {
 			if (labels.containsKey(paramArray[1])) {
 				// If that fails, try to parse it as a label
-				immediate = labels.get(paramArray[1]) - address - 4;
+				immediate = labels.get(paramArray[1]) - address - 1;
 			} else {
 				throw new IllegalArgumentException("The label " + paramArray[1] + " cannot be found");
 			}
@@ -590,7 +590,7 @@ public class Assembler {
 		} catch (NumberFormatException e) {
 			if (labels.containsKey(paramArray[2])) {
 				// If that fails, try to parse it as a label
-				immediate = labels.get(paramArray[2]) - address - 4;
+				immediate = labels.get(paramArray[2]) - address - 1;
 			} else {
 				throw new IllegalArgumentException("The label " + paramArray[2] + " cannot be found");
 			}
@@ -607,10 +607,10 @@ public class Assembler {
 		compiledLine |= BRANCH_3ARG.get(opcode);
 
 		// Add the second register
-		compiledLine |= REGISTERS.get(paramArray[1]) << 28;
+		compiledLine |= REGISTERS.get(paramArray[0]) << 28;
 
 		// Add the first register
-		compiledLine |= REGISTERS.get(paramArray[0]) << 24;
+		compiledLine |= REGISTERS.get(paramArray[1]) << 24;
 
 		// Add the immediate
 		compiledLine |= (immediate & 0xFFFF) << 8;
@@ -639,14 +639,14 @@ public class Assembler {
 			if (origMatcher.matches()) {
 				// Parse the address
 				int oldAddress = address;
-				address = parseLiteral(origMatcher.group(1));
+				address = parseLiteral(origMatcher.group(1)) >> 2;
 
 				// Fill the empty memory with the bytes DEAD
 				if (oldAddress > address) {
 					throw new UnsupportedOperationException(
 							"The assembler does not support origin statements going up");
 				} else {
-					String deadMemory = String.format("[%08x:%08x] : DEAD;", oldAddress >> 2, address >> 2);
+					String deadMemory = String.format("[%08x:%08x] : DEAD;", oldAddress, address - 1);
 					compiledCode.add(deadMemory);
 				}
 
@@ -657,7 +657,7 @@ public class Assembler {
 				String params = tmpArr[1];
 
 				// Add the comment line
-				String comment = String.format("-- @ 0x%08x : %-8s %s", address, opcode, params);
+				String comment = String.format("-- @ 0x%08x : %-8s %s", address << 2, opcode, params);
 				compiledCode.add(comment);
 
 				int byteCode = 0;
@@ -684,13 +684,13 @@ public class Assembler {
 					throw new UnsupportedOperationException("The opcode " + opcode + " is not supported");
 				}
 
-				String compiledLine = String.format("%08x : %08x;", address >> 2, byteCode);
+				String compiledLine = String.format("%08x : %08x;", address, byteCode);
 				compiledCode.add(compiledLine);
-				address += Integer.BYTES;
+				address ++;
 			}
 		}
 		
-		String deadMemory = String.format("[%08x:%08x] : DEAD;", address >> 2, DEPTH - 1);
+		String deadMemory = String.format("[%08x:%08x] : DEAD;", address, DEPTH - 1);
 		compiledCode.add(deadMemory);
 		
 		return compiledCode;
@@ -724,7 +724,7 @@ public class Assembler {
 		} catch (NumberFormatException e) {
 			if (labels.containsKey(jalMatcher.group(2))) {
 				// If that fails, try to parse it as a label
-				immediate = labels.get(jalMatcher.group(2)) - address - 4;
+				immediate = labels.get(jalMatcher.group(2));
 			} else {
 				throw new IllegalArgumentException("The label " + jalMatcher.group(2) + " cannot be found");
 			}
