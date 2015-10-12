@@ -858,7 +858,7 @@ public class Assembler {
 		compiledLine |= REGISTERS.get(paramArray[0]) << 28;
 				
 		//Add the immediate
-		compiledLine |= (immediate & 0xFFFF) << 8;
+		compiledLine |= ((immediate >> Short.SIZE) & 0xFFFF) << 8;
 		
 		return compiledLine;
 	}
