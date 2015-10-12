@@ -115,7 +115,7 @@ public class Assembler {
 		// Check if the input file exists
 		File inputFile = new File(args[0]);
 		if (!inputFile.exists()) {
-			System.err.println("The file " + args[0] + "does not exist");
+			System.err.println("The file " + args[0] + " does not exist");
 			return;
 		}
 				
@@ -190,7 +190,7 @@ public class Assembler {
 			
 			// Remove spaces before and after equal signs, commas, parenthesis,
 			// and colons.
-			return line.replaceAll("(?<=[()=,]) | (?=[()=,])", "");
+			return line.replaceAll("(?<=[()=,:]) | (?=[()=,:])", "");
 		});
 
 		// Remove all blank lines
@@ -275,7 +275,7 @@ public class Assembler {
 	 * @return The value as an integer
 	 */
 	private int parseLiteral(String literal) {
-		Pattern immediates = Pattern.compile("(0X|X)?([\\dA-F\\-]++)(h)?");
+		Pattern immediates = Pattern.compile("(0X|X)?(\\-?[\\dA-F]++)?");
 		Matcher matcher = immediates.matcher(literal);
 
 		// Check if the immediate is a number
@@ -289,7 +289,7 @@ public class Assembler {
 		// The cast to long and back to integer are neccesary, otherwise, the
 		// valueOf will fail to parse String literals whose equivalent integers
 		// would be negative.
-		if (matcher.group(1) != null || matcher.group(3) != null) {
+		if (matcher.group(1) != null) {
 			return (int)(Long.valueOf(matcher.group(2), 16) & 0xFFFFFFFF);
 		} else {
 			return (int)(Long.valueOf(matcher.group(2)) & 0xFFFFFFFF);
@@ -331,12 +331,12 @@ public class Assembler {
 	private void replacePseudoCodes(List<String> code) {
 		ListIterator<String> i = code.listIterator();
 
-		Pattern patternBR = Pattern.compile("BR (\\w++)");
+		Pattern patternBR = Pattern.compile("BR (\\-?\\w++)");
 		Pattern patternNOT = Pattern.compile("NOT (\\w++),(\\w++)");
-		Pattern patternBLE = Pattern.compile("BLE (\\w++),(\\w++),(\\w++)");
-		Pattern patternBGE = Pattern.compile("BGE (\\w++),(\\w++),(\\w++)");
-		Pattern patternCALL = Pattern.compile("CALL (\\w++\\(\\w++\\))");
-		Pattern patternJMP = Pattern.compile("JMP (\\w++\\(\\w++\\))");
+		Pattern patternBLE = Pattern.compile("BLE (\\w++),(\\w++),(\\-?\\w++)");
+		Pattern patternBGE = Pattern.compile("BGE (\\w++),(\\w++),(\\-?\\w++)");
+		Pattern patternCALL = Pattern.compile("CALL (\\-?\\w++\\(\\w++\\))");
+		Pattern patternJMP = Pattern.compile("JMP (\\-?\\w++\\(\\w++\\))");
 
 		Matcher matcherBR = patternBR.matcher("");
 		Matcher matcherNOT = patternNOT.matcher("");
@@ -703,7 +703,7 @@ public class Assembler {
 	 * @return The compiled bytecode
 	 */
 	private int translateJAL(String params, int address){
-		Pattern jalPattern = Pattern.compile("(\\w++),(\\w++)\\((\\w++)\\)");
+		Pattern jalPattern = Pattern.compile("(\\w++),(\\-?\\w++)\\((\\w++)\\)");
 		Matcher jalMatcher = jalPattern.matcher(params);
 		
 		// Check the number of parameters
@@ -760,7 +760,7 @@ public class Assembler {
 	 * @return The compiled code
 	 */
 	private int translateLW(String params){
-		Pattern lwPattern = Pattern.compile("(\\w++),(\\w++)\\((\\w++)\\)");
+		Pattern lwPattern = Pattern.compile("(\\w++),(\\-?\\w++)\\((\\w++)\\)");
 		Matcher lwMatcher = lwPattern.matcher(params);
 		
 		// Check the number of parameters
@@ -871,7 +871,7 @@ public class Assembler {
 	 * @return The compiled instruction
 	 */
 	private int translateSW(String params){
-		Pattern swPattern = Pattern.compile("(\\w++),(\\w++)\\((\\w++)\\)");
+		Pattern swPattern = Pattern.compile("(\\w++),(\\-?\\w++)\\((\\w++)\\)");
 		Matcher swMatcher = swPattern.matcher(params);
 		
 		// Check the number of parameters
