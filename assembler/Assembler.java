@@ -687,7 +687,8 @@ public class Assembler {
 							"The assembler does not support origin statements going up");
 				} else {
 					String deadMemory = String.format("[%08x:%08x] : DEAD;", oldAddress, address - 1);
-					compiledCode.add(deadMemory);
+					if(address - 1 > -1)
+						compiledCode.add(deadMemory);
 				}
 
 			} else {

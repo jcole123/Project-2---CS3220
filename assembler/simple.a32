@@ -6,7 +6,7 @@
 .NAME	OFSKEY =0x00000010
 .NAME	SW     =0x00000014
 
-
+% asdasdasdasdasdasdas
 	.ORIG 0x40
 	add	s2,s0,s1 ;remove this comment
 	; Our FP register will be zero
