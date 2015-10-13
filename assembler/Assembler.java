@@ -29,6 +29,7 @@ public class Assembler {
 			+ ";\nADDRESS_RADIX=HEX;\nDATA_RADIX=HEX;\nCONTENT BEGIN";
 	
 	private static final Map<String, Integer> REGISTERS = new HashMap<>();
+	private static final List<String> RESERVED = new ArrayList<>();
 	
 	static {
 		ALU_CMP_R.put("AND", 0x40);
@@ -66,25 +67,25 @@ public class Assembler {
 		ALU_CMP_I.put("NEI", 0x9a);
 		ALU_CMP_I.put("GTEI", 0xaa);
 		ALU_CMP_I.put("GTI", 0xba);
-		
+
 		BRANCH_3ARG.put("BF", 0x06);
 		BRANCH_3ARG.put("BEQ", 0x16);
 		BRANCH_3ARG.put("BLT", 0x26);
 		BRANCH_3ARG.put("BLTE", 0x36);
-		
+
 		BRANCH_3ARG.put("BT", 0x86);
 		BRANCH_3ARG.put("BNE", 0x96);
 		BRANCH_3ARG.put("BGTE", 0xa6);
 		BRANCH_3ARG.put("BGT", 0xb6);
-		
+
 		BRANCH_2ARG.put("BEQZ", 0x56);
 		BRANCH_2ARG.put("BLTZ", 0x66);
 		BRANCH_2ARG.put("BLTEZ", 0x76);
-		
+
 		BRANCH_2ARG.put("BNEZ", 0xd6);
 		BRANCH_2ARG.put("BGTEZ", 0xe6);
 		BRANCH_2ARG.put("BGTZ", 0xf6);
-		
+
 		REGISTERS.put("A0", 0);
 		REGISTERS.put("A1", 1);
 		REGISTERS.put("A2", 2);
@@ -101,6 +102,23 @@ public class Assembler {
 		REGISTERS.put("RA", 15);
 		for (int i = 0; i < 16; i++)
 			REGISTERS.put("R"+i, i);
+		
+		RESERVED.addAll(ALU_CMP_R.keySet());
+		RESERVED.addAll(ALU_CMP_I.keySet());
+		RESERVED.addAll(BRANCH_3ARG.keySet());
+		RESERVED.addAll(BRANCH_2ARG.keySet());
+		RESERVED.addAll(REGISTERS.keySet());
+		RESERVED.add("JAL");
+		RESERVED.add("MVHI");
+		RESERVED.add("SW");
+		RESERVED.add("LW");
+		RESERVED.add("BR");
+		RESERVED.add("NOT");
+		RESERVED.add("BLE");
+		RESERVED.add("BGE");
+		RESERVED.add("CALL");
+		RESERVED.add("RET");
+		RESERVED.add("JMP");
 	}
 	
 	public static void main(String[] args) {
@@ -251,10 +269,22 @@ public class Assembler {
 				address = parseLiteral(origMatcher.group(1));
 
 			} else if (labelMatcher.matches()) {
+				String label = labelMatcher.group(1);
+				// If the name is an existing label, throw an error; do not
+				// allow duplicate labels.
+				if (labels.containsKey(labelMatcher.group(1))) {
+					throw new IllegalArgumentException("The label " + label + " was declared multiple times");
+				}
+
+				// If the label is using a reserved keyword, throw an error
+				if (RESERVED.contains(label)) {
+					throw new IllegalArgumentException("The label " + label + " is using a reserved keyword");
+				}
+
 				// If the address is a label, add the label and the current
 				// address to the label map. Furthermore, remove the label
 				// declaration from the source list.
-				labels.put(labelMatcher.group(1), address >> 2);
+				labels.put(label, address >> 2);
 				i.remove();
 
 			} else {
@@ -315,6 +345,16 @@ public class Assembler {
 
 			String label = matcher.group(1);
 			int value = parseLiteral(matcher.group(2));
+
+			// Check that the .NAME has not be declared mutiple times
+			if (labels.containsKey(label)) {
+				throw new IllegalArgumentException("The label " + label + " was declared multiple times");
+			}
+
+			// Check that the .NAME is not a reserved keyword
+			if (RESERVED.contains(label)) {
+				throw new IllegalArgumentException("The label " + label + " is using a reserved keyword");
+			}
 
 			// Add the NAME to the label's map
 			labels.put(label, value);
