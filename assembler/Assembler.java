@@ -686,7 +686,9 @@ public class Assembler {
 					throw new UnsupportedOperationException(
 							"The assembler does not support origin statements going up");
 				} else {
-					String deadMemory = String.format("[%08x:%08x] : DEAD;", oldAddress, address - 1);
+					String deadMemory = String.format("[%08x..%08x] : DEAD;", oldAddress, address - 1);
+					if(oldAddress == address - 1)
+						deadMemory = String.format("%08x : DEAD;", oldAddress);	
 					if(address - 1 > -1)
 						compiledCode.add(deadMemory);
 				}
@@ -730,8 +732,9 @@ public class Assembler {
 				address ++;
 			}
 		}
-		
-		String deadMemory = String.format("[%08x:%08x] : DEAD;", address, DEPTH - 1);
+		//Changed format to match that of the test cases provided on tsqure
+		//String.format only specifies a minimum width, so it will still work on numbers greater than 4 bytes
+		String deadMemory = String.format("[%04x..%04x] : DEAD;", address, DEPTH - 1);
 		compiledCode.add(deadMemory);
 		
 		return compiledCode;

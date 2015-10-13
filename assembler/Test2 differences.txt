@@ -1,0 +1,2 @@
+line 359: Test2.mif: [000000b1..000007ff] : DEAD;
+Test2-orig.mif: [00b1..07ff] : DEAD;
