@@ -2,7 +2,6 @@ import sys
 import os
 #Give two files, output any lines from file1 that don't match the same line from file2
 def main(fOne, fTwo):
-    #Works if files don't have same length but no line numbers
     '''with open(fOne, 'r') as fileOne:
         with open(fTwo,'r') as fileTwo:
             differ = set(fileOne).difference(fileTwo)
@@ -12,7 +11,6 @@ def main(fOne, fTwo):
             if '--' not in line: #ignore comments
                 output.write(line)'''
 
-    #Won't work if files don't have same length because I'm lazy
     #Includes line numbers and differences
     f1 = open(fOne, 'r')
     f2 = open(fTwo, 'r')
@@ -22,16 +20,17 @@ def main(fOne, fTwo):
     f2.close()
     outFile = open('compare-results.txt', 'w')
     line = 0
+    empty = 0    
     for i in fileOne:
         if i != fileTwo[line]:
             if '--' not in i:
                 outFile.write('line ' + str(line+1) + ': ' + fOne + ': ' + i + fTwo + ': ' + fileTwo[line])
-        line += 1
+                empty += 1
+        line = line + 1 if line+1 < len(fileTwo) else line
     outFile.close()
-    if (os.stat('compare-results.txt').st_size == 0)
-        oFile = open('compare-results.txt', 'w')
-        
-        
+    if (empty == 0):
+        print "Files were an exact match"
+
 
 if __name__ == "__main__":
    if len(sys.argv) != 3:
