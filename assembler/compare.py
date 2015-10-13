@@ -1,5 +1,5 @@
 import sys
-
+#Give two files, output any lines from file1 that don't match the same line from file2
 def main(fOne, fTwo):
     with open(fOne, 'r') as fileOne:
         with open(fTwo,'r') as fileTwo:
