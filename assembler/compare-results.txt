@@ -1,0 +1,2 @@
+line 6: Sorter2.mif: [00000000..0000000f] : DEAD;a
+Sorter2-orig.mif: [00000000..0000000f] : DEAD;

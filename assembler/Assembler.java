@@ -733,7 +733,7 @@ public class Assembler {
 			}
 		}
 		//Changed format to match that of the test cases provided on tsqure
-		//String.format only specifies a minimum width, so it will still work on numbers greater than 4 bytes
+		//String.format only specifies a minimum width, so it will still work on numbers greater than 4 nibbles
 		String deadMemory = String.format("[%04x..%04x] : DEAD;", address, DEPTH - 1);
 		compiledCode.add(deadMemory);
 		
