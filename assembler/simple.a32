@@ -15,7 +15,12 @@
 	.ORIG 0x32
 	add	s0,s0,s0 ;remove this comment ; 0c
 	xor		fp,fp,fp ;0d
-	xor		fp,fp,fp  ;0e
-	xor		fp,fp,fp ;0f
-		;xor		fp,fp,fp ; 10 
+	;xor		fp,fp,fp  ;0e
+	;xor		fp,fp,fp ;0f
+	;xor		fp,fp,fp ; 10 
+	.ORIG 0x38
+	xor		fp,fp,fp ;0d
+xor		fp,fp,fp ;0d
+xor		fp,fp,fp ;0d
+
 
