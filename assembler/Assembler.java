@@ -30,6 +30,7 @@ public class Assembler {
 	
 	private static final Map<String, Integer> REGISTERS = new HashMap<>();
 	private static final List<String> RESERVED = new ArrayList<>();
+	private List<Integer> backtrack = new ArrayList<>();
 	
 	static {
 		ALU_CMP_R.put("AND", 0x40);
@@ -267,7 +268,7 @@ public class Assembler {
 				// If the line is an origin line, set the address to the
 				// requested origin.
 				address = parseLiteral(origMatcher.group(1));
-
+				
 			} else if (labelMatcher.matches()) {
 				String label = labelMatcher.group(1);
 				// If the name is an existing label, throw an error; do not
@@ -671,27 +672,34 @@ public class Assembler {
 		List<String> compiledCode = new ArrayList<>();
 
 		int address = 0;
-
+		int check = 1;
+		//address may not always be the highest address in the file, so this will hold the largest address
+		int biggest = 0;
 		for (String codeLine : code) {
-
+			//Ensures that past addresses aren't overwritten.
+			if(backtrack.indexOf(address)!=-1 && check==1) {
+				throw new UnsupportedOperationException(
+							"The assembler does not support overwriting past instructions");
+			}
 			// Handle .ORIG tags separately
 			origMatcher.reset(codeLine);
 			if (origMatcher.matches()) {
 				// Parse the address
 				int oldAddress = address;
 				address = parseLiteral(origMatcher.group(1)) >> 2;
-
+				check = 0;
 				// Fill the empty memory with the bytes DEAD
-				if (oldAddress > address) {
+				if (backtrack.indexOf(address)>-1) {
 					throw new UnsupportedOperationException(
-							"The assembler does not support origin statements going up");
-				} else {
+							"The assembler does not overwriting past instructions");
+				} else if(oldAddress < address){
 					String deadMemory = String.format("[%08x..%08x] : DEAD;", oldAddress, address - 1);
 					if(oldAddress == address - 1)
 						deadMemory = String.format("%08x : DEAD;", oldAddress);	
 					if(address - 1 > -1)
 						compiledCode.add(deadMemory);
 				}
+				backtrack.add(address);
 
 			} else {
 				// Divide the code into the opcode and the parameters.
@@ -729,12 +737,15 @@ public class Assembler {
 
 				String compiledLine = String.format("%08x : %08x;", address, byteCode);
 				compiledCode.add(compiledLine);
+				
 				address ++;
+				biggest = address>biggest? address:biggest;
+				check = 1;
 			}
 		}
 		//Changed format to match that of the test cases provided on tsqure
 		//String.format only specifies a minimum width, so it will still work on numbers greater than 4 nibbles
-		String deadMemory = String.format("[%04x..%04x] : DEAD;", address, DEPTH - 1);
+		String deadMemory = String.format("[%04x..%04x] : DEAD;", biggest, DEPTH - 1);
 		compiledCode.add(deadMemory);
 		
 		return compiledCode;

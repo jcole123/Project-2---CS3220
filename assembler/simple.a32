@@ -4,15 +4,18 @@
 .NAME	OFSLEDR=0x00000004
 .NAME	OFSLEDG=0x00000008
 .NAME	OFSKEY =0x00000010
-.NAME	SW     =0x00000014
 
-% asdasdasdasdasdasdas
+
 	.ORIG 0x40
-	add	s2,s0,s1 ;remove this comment
+	add	s2,s0,s1 ;remove this comment ;10
 	; Our FP register will be zero
-	xor		fp,fp,fp ;definitely remove this comment
+	xor		fp,fp,fp ;definitely remove this comment ;11
 	; Prepare the gp register
-	addi s2, s1, 20
-	
-
+	addi s2, s1, 20 ;12
+	.ORIG 0x32
+	add	s0,s0,s0 ;remove this comment ; 0c
+	xor		fp,fp,fp ;0d
+	xor		fp,fp,fp  ;0e
+	xor		fp,fp,fp ;0f
+	;	xor		fp,fp,fp ; 10 
 
