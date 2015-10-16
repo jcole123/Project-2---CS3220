@@ -30,7 +30,6 @@ public class Assembler {
 	
 	private static final Map<String, Integer> REGISTERS = new HashMap<>();
 	private static final List<String> RESERVED = new ArrayList<>();
-	private List<Integer> backtrack = new ArrayList<>();
 	
 	static {
 		ALU_CMP_R.put("AND", 0x40);
@@ -671,13 +670,14 @@ public class Assembler {
 
 		List<String> compiledCode = new ArrayList<>();
 
+		List<MinMax> invalid = new ArrayList<>();
 		int address = 0;
 		int check = 1;
 		//address may not always be the highest address in the file, so this will hold the largest address
 		int biggest = 0;
 		for (String codeLine : code) {
 			//Ensures that past addresses aren't overwritten.
-			if(backtrack.indexOf(address)!=-1 && check==1) {
+			if(invalid.indexOf(new MinMax(address))!=-1 && check==1) {
 				throw new UnsupportedOperationException(
 							"The assembler does not support overwriting past instructions");
 			}
@@ -689,17 +689,21 @@ public class Assembler {
 				address = parseLiteral(origMatcher.group(1)) >> 2;
 				check = 0;
 				// Fill the empty memory with the bytes DEAD
-				if (backtrack.indexOf(address)>-1) {
-					throw new UnsupportedOperationException(
+				for (MinMax temp : invalid) {
+					if (address >= temp.min && address <= temp.max) {
+						throw new UnsupportedOperationException(
 							"The assembler does not overwriting past instructions");
-				} else if(oldAddress < address){
+							
+					}
+				}
+				if(oldAddress < address){
 					String deadMemory = String.format("[%08x..%08x] : DEAD;", oldAddress, address - 1);
 					if(oldAddress == address - 1)
 						deadMemory = String.format("%08x : DEAD;", oldAddress);	
 					if(address - 1 > -1)
 						compiledCode.add(deadMemory);
 				}
-				backtrack.add(address);
+				invalid.add(new MinMax(address));
 
 			} else {
 				// Divide the code into the opcode and the parameters.
@@ -737,7 +741,7 @@ public class Assembler {
 
 				String compiledLine = String.format("%08x : %08x;", address, byteCode);
 				compiledCode.add(compiledLine);
-				
+				invalid.get(invalid.size()-1).max = address;
 				address ++;
 				biggest = address>biggest? address:biggest;
 				check = 1;
@@ -993,5 +997,24 @@ public class Assembler {
 			}
 		}
 		return byteCode;
+	}
+	/*
+	 * Store min/max between each .ORIG call
+	 */
+	public class MinMax {
+		int min;
+		int max;
+		public MinMax(int min) {
+			this.min = min;
+			this.max = 0;
+		}
+		@Override
+		public boolean equals(Object temp) {
+			if (!(temp instanceof MinMax)) {
+				return false;
+			}
+			MinMax t1 = (MinMax)temp;
+			return t1.min==this.min;
+		}
 	}
 }
