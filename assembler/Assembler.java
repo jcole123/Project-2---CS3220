@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -668,52 +669,37 @@ public class Assembler {
 		Pattern origPattern = Pattern.compile(".ORIG (.++)");
 		Matcher origMatcher = origPattern.matcher("");
 
-		List<String> compiledCode = new ArrayList<>();
+		// Store the word-indexed current address
+		int currentAddress = 0;
 
-		List<MinMax> invalid = new ArrayList<>();
-		int address = 0;
-		int check = 1;
-		//address may not always be the highest address in the file, so this will hold the largest address
-		int biggest = 0;
+		// Have a list to store all valid code blocks
+		List<CodeBlock> compiledBlocks = new ArrayList<>();
+
+		// In case no origin blocks are found, assume the current code block
+		// starts at 0
+		CodeBlock currentCodeBlock = new CodeBlock(currentAddress);
+		compiledBlocks.add(currentCodeBlock);
+
 		for (String codeLine : code) {
-			//Ensures that past addresses aren't overwritten.
-			if(invalid.indexOf(new MinMax(address))!=-1 && check==1) {
-				throw new UnsupportedOperationException(
-							"The assembler does not support overwriting past instructions");
-			}
+
 			// Handle .ORIG tags separately
 			origMatcher.reset(codeLine);
 			if (origMatcher.matches()) {
-				// Parse the address
-				int oldAddress = address;
-				address = parseLiteral(origMatcher.group(1)) >> 2;
-				check = 0;
-				// Fill the empty memory with the bytes DEAD
-				for (MinMax temp : invalid) {
-					if (address >= temp.min && address <= temp.max) {
-						throw new UnsupportedOperationException(
-							"The assembler does not overwriting past instructions");
-							
-					}
-				}
-				if(oldAddress < address){
-					String deadMemory = String.format("[%08x..%08x] : DEAD;", oldAddress, address - 1);
-					if(oldAddress == address - 1)
-						deadMemory = String.format("%08x : DEAD;", oldAddress);	
-					if(address - 1 > -1)
-						compiledCode.add(deadMemory);
-				}
-				invalid.add(new MinMax(address));
 
+				// Parse the address into a word-address address
+				currentAddress = parseLiteral(origMatcher.group(1)) >> 2;
+
+				// Start a new code block
+				currentCodeBlock = new CodeBlock(currentAddress);
+
+				// Add the code block to the list of compiled blocks
+				compiledBlocks.add(currentCodeBlock);
+				
 			} else {
 				// Divide the code into the opcode and the parameters.
 				String[] tmpArr = codeLine.split(" ", 2);
 				String opcode = tmpArr[0];
 				String params = tmpArr[1];
-
-				// Add the comment line
-				String comment = String.format("-- @ 0x%08x : %-8s %s", address << 2, opcode, params);
-				compiledCode.add(comment);
 
 				int byteCode = 0;
 
@@ -722,13 +708,13 @@ public class Assembler {
 				} else if (ALU_CMP_I.containsKey(opcode)) {
 					byteCode = translateAluCmpI(opcode, params);
 				} else if (BRANCH_3ARG.containsKey(opcode)) {
-					byteCode = translateBranch3Arg(opcode, params, address);
+					byteCode = translateBranch3Arg(opcode, params, currentAddress);
 				} else if (BRANCH_2ARG.containsKey(opcode)) {
-					byteCode = translateBranch2Arg(opcode, params, address);
+					byteCode = translateBranch2Arg(opcode, params, currentAddress);
 				} else if (opcode.equals("MVHI")) {
 					byteCode = translateMVHI(params);
 				} else if (opcode.equals("JAL")) {
-					byteCode = translateJAL(params, address);
+					byteCode = translateJAL(params, currentAddress);
 				} else if (opcode.equals("SW")) {
 					byteCode = translateSW(params);
 				} else if (opcode.equals("LW")) {
@@ -738,22 +724,80 @@ public class Assembler {
 				} else {
 					throw new UnsupportedOperationException("The opcode " + opcode + " is not supported");
 				}
+				
+				// Add the comment line to the code block
+				String comment = String.format("-- @ 0x%08x : %-8s %s", currentAddress << 2, opcode, params);
+				currentCodeBlock.codeBlock.add(comment);
 
-				String compiledLine = String.format("%08x : %08x;", address, byteCode);
-				compiledCode.add(compiledLine);
-				invalid.get(invalid.size()-1).max = address;
-				address ++;
-				biggest = address>biggest? address:biggest;
-				check = 1;
+				// Add the compiled line to the code Block
+				String compiledLine = String.format("%08x : %08x;", currentAddress, byteCode);
+				currentCodeBlock.codeBlock.add(compiledLine);
+				currentAddress ++;
 			}
 		}
-		//Changed format to match that of the test cases provided on tsqure
-		//String.format only specifies a minimum width, so it will still work on numbers greater than 4 nibbles
-		String deadMemory = String.format("[%04x..%04x] : DEAD;", biggest, DEPTH - 1);
-		compiledCode.add(deadMemory);
+		
+		// Before checking anything, remove any empty code blocks created by
+		// adjacent .orig statements
+		compiledBlocks.removeIf(b -> b.codeBlock.size() == 0);
+		
+		// Sort the code blocks so they are ordered in the list by starting addresses
+		Collections.sort(compiledBlocks);
+		
+		// Check if anything is being overwritten
+		for (int i = 0; i < compiledBlocks.size() - 1; i++) {
+			int lastAddressOfCurrent = compiledBlocks.get(i).startingAddress
+					+ (compiledBlocks.get(i).codeBlock.size() / 2) - 1;
+			int firstAddressOfNextBlock = compiledBlocks.get(i + 1).startingAddress;
+
+			// Check for data being overwritten
+			if (lastAddressOfCurrent >= firstAddressOfNextBlock) {
+				throw new IllegalArgumentException("The assembler does not support overwritting previous instructions");
+			}
+		}
+
+		// Check if the final code block overflows the memory
+		int lastAddressOfLastBlock = compiledBlocks.get(compiledBlocks.size() - 1).startingAddress;
+		lastAddressOfLastBlock += compiledBlocks.get(compiledBlocks.size() - 1).codeBlock.size() / 2 - 1;
+		if (lastAddressOfLastBlock > DEPTH - 1) {
+			throw new IllegalArgumentException("The code overflows the memory space");
+		}
+
+		// Create a list for the final compiled code
+		List<String> compiledCode = new ArrayList<>();
+		
+		int firstFreeAddress = 0;
+		for (CodeBlock codeBlock : compiledBlocks) {
+			int nextUsedAddress = codeBlock.startingAddress;
+			
+			// Print the DEAD memory statement. Check if the length of the
+			// statement is one or multiple lines
+			if (nextUsedAddress - firstFreeAddress == 1) {
+				String deadMemory = String.format("%08x : DEAD;", firstFreeAddress);
+				compiledCode.add(deadMemory);
+			} else if (nextUsedAddress - firstFreeAddress > 1){
+				String deadMemory = String.format("[%08x..%08x] : DEAD;", firstFreeAddress, nextUsedAddress - 1);
+				compiledCode.add(deadMemory);
+			}
+			
+			// Add the compiled block of code to the final version
+			compiledCode.addAll(codeBlock.codeBlock);
+			
+			// Update the first unused address to the next spot
+			firstFreeAddress = codeBlock.startingAddress + codeBlock.codeBlock.size() / 2;
+		}
+
+		// Add the final Dead statement, if required
+		if (DEPTH - firstFreeAddress == 1) {
+			String deadMemory = String.format("%08x : DEAD;", firstFreeAddress);
+			compiledCode.add(deadMemory);
+		} else if (DEPTH - firstFreeAddress > 1) {
+			String deadMemory = String.format("[%08x..%08x] : DEAD;", firstFreeAddress, DEPTH - 1);
+			compiledCode.add(deadMemory);
+		}
 		
 		return compiledCode;
 	}
+	
 	
 	/**
 	 * Translates JAL statements
@@ -810,6 +854,7 @@ public class Assembler {
 
 		return compiledLine;
 	}
+	
 	
 	/**
 	 * Translates load word instructions
@@ -868,6 +913,7 @@ public class Assembler {
 		return compiledLine;
 	}
 	
+	
 	/**
 	 * Translates the MVHI statement
 	 * @param params The comma separated parameters
@@ -921,6 +967,7 @@ public class Assembler {
 		
 		return compiledLine;
 	}
+	
 	
 	/**
 	 * Translates the store word instruction
@@ -977,6 +1024,7 @@ public class Assembler {
 		return compiledLine;
 	}
 	
+	
 	/**
 	 * Translates a .WORD statement
 	 * @param param The parameter
@@ -998,23 +1046,24 @@ public class Assembler {
 		}
 		return byteCode;
 	}
-	/*
-	 * Store min/max between each .ORIG call
+
+	/**
+	 * Represents a single contiguous block of code
+	 * @author Michael Chen & Justin Cole
+	 *
 	 */
-	public class MinMax {
-		int min;
-		int max;
-		public MinMax(int min) {
-			this.min = min;
-			this.max = 0;
+	private class CodeBlock implements Comparable<CodeBlock>{
+		public final int startingAddress;
+		public List<String> codeBlock;
+		
+		public CodeBlock(int startAddress) {
+			startingAddress = startAddress;
+			codeBlock = new ArrayList<>();
 		}
+
 		@Override
-		public boolean equals(Object temp) {
-			if (!(temp instanceof MinMax)) {
-				return false;
-			}
-			MinMax t1 = (MinMax)temp;
-			return t1.min==this.min;
+		public int compareTo(CodeBlock o) {
+			return Integer.compare(startingAddress, o.startingAddress);
 		}
 	}
 }

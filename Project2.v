@@ -48,6 +48,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   wire pcWrtEn = 1'b1;
   wire[DBITS - 1: 0] pcIn; // Implement the logic that generates pcIn; you may change pcIn to reg if necessary
   wire[DBITS - 1: 0] pcOut;
+  
   // This PC instantiation is your starting point
   Register #(.BIT_WIDTH(DBITS), .RESET_VALUE(START_PC)) pc (clk, reset, pcWrtEn, pcIn, pcOut);
 
@@ -55,15 +56,37 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   wire[IMEM_DATA_BIT_WIDTH - 1: 0] instWord;
   InstMemory #(IMEM_INIT_FILE, IMEM_ADDR_BIT_WIDTH, IMEM_DATA_BIT_WIDTH) instMem (pcOut[IMEM_PC_BITS_HI - 1: IMEM_PC_BITS_LO], instWord);
   
-  // Put the code for getting opcode1, rd, rs, rt, imm, etc. here 
+  // Put the code for getting opcode1, rd, rs, rt, imm, etc. here
+  wire[3:0] RS1, RS2;
+  TwoPortMux #(8) regMux(regSel, instWord[31:24], instWord[27:20], {RS1, RS2});
   
   // Create the registers
+  wire[3:0] RD;
+  assign RD = instWord[31:28];
+  
+  wire[31:0] DATA1, DATA2, REG_IN;
+  AsyncRegister registers(clk, RD, RS1, RS2, REG_IN, WR_EN, DATA1, DATA2);
+  
+  // Extend the immediate
+  wire[15:0] immSmall;
+  wire[31:0] immediate;
+  assign immSmall = instWord[23:8];
+  SignExtension #(16,32) extender(immSmall, immediate);
+  
+  // Switch between the immediate and DATA2
+  wire[31:0] ARG2;
+  TwoPortMux #(32) argMux(argSel, DATA2, immediate);
   
   // Create ALU unit
   
   // Put the code for data memory and I/O here
   
   // KEYS, SWITCHES, HEXS, and LEDS are memeory mapped IO
+  
+  // Control logic
+  wire regSel = 0;
+  wire argSel = 0;
+  wire WR_EN = 0;
     
 endmodule
 

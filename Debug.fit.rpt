@@ -1,6 +1,6 @@
 Fitter report for Debug
-Mon Sep 29 23:53:20 2014
-Quartus II 32-bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+Thu Oct 15 14:07:16 2015
+Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
 ---------------------
@@ -9,26 +9,27 @@ Quartus II 32-bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edit
   1. Legal Notice
   2. Fitter Summary
   3. Fitter Settings
-  4. Ignored Assignments
-  5. Incremental Compilation Preservation Summary
-  6. Incremental Compilation Partition Settings
-  7. Incremental Compilation Placement Preservation
-  8. Pin-Out File
-  9. Fitter Resource Usage Summary
- 10. Fitter Partition Statistics
- 11. Input Pins
- 12. Output Pins
- 13. I/O Bank Usage
- 14. All Package Pins
- 15. Output Pin Default Load For Reported TCO
- 16. Fitter Resource Utilization by Entity
- 17. Delay Chain Summary
- 18. Pad To Core Delay Chain Fanout
- 19. Other Routing Usage Summary
- 20. Fitter Device Options
- 21. Operating Settings and Conditions
- 22. Fitter Messages
- 23. Fitter Suppressed Messages
+  4. Parallel Compilation
+  5. Ignored Assignments
+  6. Incremental Compilation Preservation Summary
+  7. Incremental Compilation Partition Settings
+  8. Incremental Compilation Placement Preservation
+  9. Pin-Out File
+ 10. Fitter Resource Usage Summary
+ 11. Fitter Partition Statistics
+ 12. Input Pins
+ 13. Output Pins
+ 14. I/O Bank Usage
+ 15. All Package Pins
+ 16. Output Pin Default Load For Reported TCO
+ 17. Fitter Resource Utilization by Entity
+ 18. Delay Chain Summary
+ 19. Pad To Core Delay Chain Fanout
+ 20. Other Routing Usage Summary
+ 21. Fitter Device Options
+ 22. Operating Settings and Conditions
+ 23. Fitter Messages
+ 24. Fitter Suppressed Messages
 
 
 
@@ -54,8 +55,8 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Fitter Summary                                                                       ;
 +------------------------------------+-------------------------------------------------+
-; Fitter Status                      ; Successful - Mon Sep 29 23:53:20 2014           ;
-; Quartus II 32-bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
+; Fitter Status                      ; Successful - Thu Oct 15 14:07:16 2015           ;
+; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; Debug                                           ;
 ; Top-level Entity Name              ; Project2                                        ;
 ; Family                             ; Cyclone II                                      ;
@@ -122,6 +123,24 @@ applicable agreement for further details.
 ; Auto Global Register Control Signals                                       ; On                             ; On                             ;
 ; Force Fitter to Avoid Periphery Placement Warnings                         ; Off                            ; Off                            ;
 +----------------------------------------------------------------------------+--------------------------------+--------------------------------+
+
+
++------------------------------------------+
+; Parallel Compilation                     ;
++----------------------------+-------------+
+; Processors                 ; Number      ;
++----------------------------+-------------+
+; Number detected on machine ; 8           ;
+; Maximum allowed            ; 4           ;
+;                            ;             ;
+; Average used               ; 1.00        ;
+; Maximum used               ; 4           ;
+;                            ;             ;
+; Usage by Processor         ; % Time Used ;
+;     Processor 1            ; 100.0%      ;
+;     Processors 2-4         ; < 0.1%      ;
+;     Processors 5-8         ;   0.0%      ;
++----------------------------+-------------+
 
 
 +-----------------------------------------------------------------------------------------------+
@@ -493,7 +512,7 @@ applicable agreement for further details.
 +--------------+
 ; Pin-Out File ;
 +--------------+
-The pin-out file can be found in C:/Users/jspark/Desktop/Project2/Debug.pin.
+The pin-out file can be found in C:/Users/Michael Chen/git/Project-2---CS3220/Debug.pin.
 
 
 +-------------------------------------------------------------------+
@@ -1382,7 +1401,7 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +-----------------+
 ; Fitter Messages ;
 +-----------------+
-Warning (20028): Parallel compilation is not licensed and has been disabled
+Info (11104): Parallel Compilation has detected 8 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 4 of the 4 physical processors detected instead.
 Info (119006): Selected device EP2C20F484C7 for design "Debug"
 Info (21077): Low junction temperature is 0 degrees C
 Info (21077): High junction temperature is 85 degrees C
@@ -1746,7 +1765,7 @@ Warning (15705): Ignored locations or region assignments to the following nodes
     Warning (15706): Node "VGA_R[2]" is assigned to location or region, but does not exist in design
     Warning (15706): Node "VGA_R[3]" is assigned to location or region, but does not exist in design
     Warning (15706): Node "VGA_VS" is assigned to location or region, but does not exist in design
-Info (171121): Fitter preparation operations ending: elapsed time is 00:00:01
+Info (171121): Fitter preparation operations ending: elapsed time is 00:00:00
 Info (170189): Fitter placement preparation operations beginning
 Info (170190): Fitter placement preparation operations ending: elapsed time is 00:00:00
 Info (170191): Fitter placement operations beginning
@@ -1756,7 +1775,7 @@ Info (170193): Fitter routing operations beginning
 Info (170195): Router estimated average interconnect usage is 0% of the available device resources
     Info (170196): Router estimated peak interconnect usage is 0% of the available device resources in the region that extends from location X12_Y0 to location X24_Y13
 Info (170194): Fitter routing operations ending: elapsed time is 00:00:00
-Info (11888): Total time spent on timing analysis during the Fitter is 0.02 seconds.
+Info (11888): Total time spent on timing analysis during the Fitter is 0.03 seconds.
 Info (306004): Started post-fitting delay annotation
 Warning (306006): Found 46 output pins without output pin load capacitance assignment
     Info (306007): Pin "LEDR[0]" has no specified output pin load capacitance -- assuming default load capacitance of 0 pF for timing analysis
@@ -1808,19 +1827,19 @@ Warning (306006): Found 46 output pins without output pin load capacitance assig
 Info (306005): Delay annotation completed successfully
 Info (306004): Started post-fitting delay annotation
 Info (306005): Delay annotation completed successfully
-Info (11218): Fitter post-fit operations ending: elapsed time is 00:00:01
+Info (11218): Fitter post-fit operations ending: elapsed time is 00:00:00
 Warning (171167): Found invalid Fitter assignments. See the Ignored Assignments panel in the Fitter Compilation Report for more information.
-Info (144001): Generated suppressed messages file C:/Users/jspark/Desktop/Project2/Debug.fit.smsg
-Info: Quartus II 32-bit Fitter was successful. 0 errors, 340 warnings
-    Info: Peak virtual memory: 428 megabytes
-    Info: Processing ended: Mon Sep 29 23:53:20 2014
-    Info: Elapsed time: 00:00:06
-    Info: Total CPU time (on all processors): 00:00:04
+Info (144001): Generated suppressed messages file C:/Users/Michael Chen/git/Project-2---CS3220/Debug.fit.smsg
+Info: Quartus II 64-Bit Fitter was successful. 0 errors, 339 warnings
+    Info: Peak virtual memory: 1140 megabytes
+    Info: Processing ended: Thu Oct 15 14:07:17 2015
+    Info: Elapsed time: 00:00:03
+    Info: Total CPU time (on all processors): 00:00:03
 
 
 +----------------------------+
 ; Fitter Suppressed Messages ;
 +----------------------------+
-The suppressed messages can be found in C:/Users/jspark/Desktop/Project2/Debug.fit.smsg.
+The suppressed messages can be found in C:/Users/Michael Chen/git/Project-2---CS3220/Debug.fit.smsg.
 
 
