@@ -1,0 +1,29 @@
+# Reading D:/altera/13.0sp1/modelsim_ase/tcl/vsim/pref.tcl 
+# do Debug_run_msim_rtl_verilog.do 
+# if {[file exists rtl_work]} {
+# 	vdel -lib rtl_work -all
+# }
+# vlib rtl_work
+# vmap work rtl_work
+# Copying D:\altera\13.0sp1\modelsim_ase\win32aloem/../modelsim.ini to modelsim.ini
+# Modifying modelsim.ini
+# ** Warning: Copied D:\altera\13.0sp1\modelsim_ase\win32aloem/../modelsim.ini to modelsim.ini.
+#          Updated modelsim.ini.
+# 
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220 {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module Project2
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(95): 'HEXTMP' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(105): 'nextPC' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(111): 'regSel' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(112): 'regWrSel' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(113): 'argSel' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(114): 'REG_EN' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(115): 'MEM_EN' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(116): 'aluSel' already declared in this scope (Project2).
+# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(117): 'pcSel' already declared in this scope (Project2).
+# ** Error: D:/altera/13.0sp1/modelsim_ase/win32aloem/vlog failed.
+# Error in macro ./Debug_run_msim_rtl_verilog.do line 8
+# D:/altera/13.0sp1/modelsim_ase/win32aloem/vlog failed.
+#     while executing
+# "vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220 {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v}"

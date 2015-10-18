@@ -1,4 +1,4 @@
-module ALU(out, a, b, sel);
+module ALU(sel, a, b, out);
 	input [4:0] sel;
 	input signed [31:0] a, b;
 	output reg signed [31:0] out;
