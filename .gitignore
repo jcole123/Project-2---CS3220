@@ -1,2 +1,10 @@
 /bin/
 /db/
+/incremental_db/
+/.classpath
+/.project
+*.bak
+*.summary
+*.rpt
+*.done
+*.class

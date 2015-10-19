@@ -41,11 +41,11 @@ module ALU(out, a, b, sel);
 			NAND: out <= ~(a & b);
 			NOR: out <= ~(a | b);
 			
-			F: out <= 32'h00000000; //?
+			F: out <= 32'h00000000;
 			EQ: out <= (a == b);
 			LT: out <= (a < b);
 			LTE: out <= (a <= b);
-			T: out <= 32'h00000001; //?
+			T: out <= 32'h00000001;
 			NE: out <= (a != b);
 			GTE: out <= (a >= b);
 			GT: out <= (a > b);

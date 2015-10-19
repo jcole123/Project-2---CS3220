@@ -17,7 +17,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	parameter ADDR_LEDR 					 	= 32'hF0000004;
 	parameter ADDR_LEDG 					 	= 32'hF0000008;
   
-	parameter IMEM_INIT_FILE				= "Sorter2.mif";
+	parameter IMEM_INIT_FILE				= "Test2.mif";
 	parameter IMEM_ADDR_BIT_WIDTH 		= 11;
 	parameter IMEM_DATA_BIT_WIDTH 		= INST_BIT_WIDTH;
 	parameter IMEM_PC_BITS_HI     		= IMEM_ADDR_BIT_WIDTH + 2;
@@ -52,8 +52,9 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
   
 	// Extend the immediate
 	wire[15:0] immSmall;
-	wire[DBITS - 1:0] immExt;
+	wire[DBITS - 1:0] immExt, immShift;
 	assign immSmall = instWord[23:8];
+	assign immShift = immExt[29:0] << 2;
 	SignExtension #(16,32) extender(immSmall, immExt);
   
 	// Create the registers
@@ -64,7 +65,7 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
 	// Switch between the immediate and DATA2
 	wire[DBITS - 1:0] ARG2;
-	TwoPortMux #(DBITS) argMux(argSel, DATA2, immExt, ARG2);
+	FourPortMux #(DBITS) argMux(argSel, DATA2, immExt, immShift, 0, ARG2);
   
 	// Create ALU unit
 	wire[DBITS - 1:0] ALU_OUT;
@@ -104,17 +105,15 @@ module Project2(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	// Generate the next program counter
 	wire[DBITS - 1:0] nextPC, nextBranch;
 	assign nextPC = pcOut + 4;
-	assign nextBranch = nextPC + (immExt << 2);
-	FourPortMux #(DBITS) pcMux(pcSel, nextPC, nextBranch, (immExt << 2) + DATA1, 0, pcIn);
+	assign nextBranch = nextPC + immShift;
+	FourPortMux #(DBITS) pcMux(pcSel, nextPC, nextBranch, ALU_OUT, 0, pcIn);
     
 	// Control logic
 	wire regSel;
-	wire[1:0] regWrSel;
-	wire argSel;
 	wire REG_EN;
 	wire MEM_EN;
 	wire[4:0] aluSel;
-	wire[1:0] pcSel;
+	wire[1:0] pcSel, argSel, regWrSel;
 	Decoder decoder(instWord[3:0], instWord[7:4], ALU_OUT[0], regSel, regWrSel, argSel, aluSel, pcSel, REG_EN, MEM_EN);
 	
 endmodule

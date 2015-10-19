@@ -16,8 +16,9 @@ module Decoder(opcode, func, aluVal, regSel, regWrSel, argSel, aluSel, pcSel, re
 	parameter REG_SEL_RS1_SECOND_ARG = 1'b1;
 	
 	// Select whether the second argument is an immediate or a register
-	parameter ARG_SEL_REGISTER = 1'b0;
-	parameter ARG_SEL_IMMEDIATE = 1'b1;
+	parameter ARG_SEL_REGISTER = 2'b00;
+	parameter ARG_SEL_IMMEDIATE = 2'b01;
+	parameter ARG_SEL_IMM_SHIFT = 2'b10;
 	
 	// Set whether the destination register should receive a value from the memory of the aluSel
 	parameter RD_ALU = 2'b00;
@@ -31,8 +32,8 @@ module Decoder(opcode, func, aluVal, regSel, regWrSel, argSel, aluSel, pcSel, re
 	
 	input[3:0] opcode, func, aluVal;
 	output reg[4:0] aluSel;
-	output reg[1:0] pcSel, regWrSel;
-	output reg regSel, argSel, regEn, memEn;
+	output reg[1:0] pcSel, regWrSel, argSel;
+	output reg regSel, regEn, memEn;
 	
 	always @(*) begin
 		
@@ -96,7 +97,7 @@ module Decoder(opcode, func, aluVal, regSel, regWrSel, argSel, aluSel, pcSel, re
 			end
 			OP1_JAL: begin
 				regSel 	<= REG_SEL_RS1_SECOND_ARG;
-				argSel 	<= ARG_SEL_IMMEDIATE;
+				argSel 	<= ARG_SEL_IMM_SHIFT;
 				aluSel 	<= ALU_ADD;
 				pcSel 	<= PC_ALU;
 				regWrSel <= RD_PC;
