@@ -16,7 +16,7 @@
 // PROGRAM "Quartus II 64-Bit"
 // VERSION "Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition"
 
-// DATE "10/19/2015 17:37:00"
+// DATE "10/25/2015 17:29:22"
 
 // 
 // Device: Altera EP2C20F484C7 Package FBGA484
@@ -28,7 +28,7 @@
 
 `timescale 1 ps/ 1 ps
 
-module Project2 (
+module SCProcController (
 	SW,
 	KEY,
 	LEDR,
@@ -2563,12 +2563,12 @@ wire \hexConv3|dOut[3]~3_combout ;
 wire \hexConv3|dOut[4]~4_combout ;
 wire \hexConv3|dOut[5]~5_combout ;
 wire \hexConv3|dOut[6]~6_combout ;
-wire [9:0] \ioLedR|out ;
-wire [7:0] \ioLedG|out ;
-wire [15:0] \ioHex|out ;
-wire [3:0] \KEY~combout ;
-wire [9:0] \SW~combout ;
 wire [31:0] \pc|dataOut ;
+wire [3:0] \KEY~combout ;
+wire [7:0] \ioLedG|out ;
+wire [9:0] \SW~combout ;
+wire [9:0] \ioLedR|out ;
+wire [15:0] \ioHex|out ;
 
 wire [2:0] \PLL_inst|altpll_component|pll_CLK_bus ;
 wire [1:0] \dataMem|data_rtl_0|auto_generated|ram_block1a0_PORTBDATAOUT_bus ;
