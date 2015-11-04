@@ -8,14 +8,17 @@ module DataMemory(clk, addr, dataOut, dataIn, writeEn);
 	input[ADDR_BIT_WIDTH - 1: 0] addr;
 	input[DATA_BIT_WIDTH - 1: 0] dataIn;
 	
-	output reg[DATA_BIT_WIDTH - 1: 0] dataOut;
+	output[DATA_BIT_WIDTH - 1: 0] dataOut;
 
 	(* ram_init_file = MEM_INIT_FILE *)
 	reg[DATA_BIT_WIDTH - 1: 0] data[0: N_WORDS - 1];
+	
+	reg[ADDR_BIT_WIDTH - 1: 0] addrReg;
 		
-	always @(negedge clk) begin
-		dataOut <= data[addr];
+	always @(posedge clk) begin
+		addrReg <= addr;
 		if (writeEn)
 			data[addr] <= dataIn;
 	end
+	assign dataOut = data[addrReg];
 endmodule
