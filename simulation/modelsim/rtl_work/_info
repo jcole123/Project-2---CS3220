@@ -2,4 +2,193 @@ m255
 K3
 13
 cModel Technology
-dD:\Dropbox\Fall 2015\CS 3220\Project-2---CS3220\simulation\modelsim
+Z0 dD:\Dropbox\Fall 2015\CS 3220\Project-2---CS3220\simulation\modelsim
+vALU
+I^hIoCMo?cll4B[fA6GN9J0
+VULRdUilV[gZe9cmI5G<O@0
+Z1 dD:\Dropbox\Fall 2015\CS 3220\Project-2---CS3220\simulation\modelsim
+Z2 w1445470847
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/ALU2.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/ALU2.v
+L0 1
+Z3 OV;L;10.1d;51
+r1
+31
+Z4 o-vlog01compat -work work -O0
+Z5 !s92 -vlog01compat -work work {+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files} -O0
+n@a@l@u
+!i10b 1
+!s100 UQE?WAYPk1TFEI;UnV>`71
+!s85 0
+!s108 1446771073.153000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/ALU2.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/ALU2.v|
+!s101 -O0
+vAsyncRegister
+Ifd]58PL5:QmMZ]]4ZNOz53
+VV<8E;Y[jLagZk57fl5Vld0
+R1
+R2
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/AsyncRegister.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/AsyncRegister.v
+L0 1
+R3
+r1
+31
+R4
+R5
+n@async@register
+!i10b 1
+!s100 7oRjnJo=[dOE9WkiVYhAm2
+!s85 0
+!s108 1446771073.333000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/AsyncRegister.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/AsyncRegister.v|
+!s101 -O0
+vDataMemory
+IZ@bU[?XzzE]CliZd5`:io2
+VI9QO0PYha7VJzH1aYPm8=2
+R1
+Z6 w1446760968
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/DataMemory.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/DataMemory.v
+L0 1
+R3
+r1
+31
+R4
+R5
+n@data@memory
+!i10b 1
+!s100 Ta]>D?`:cjo;m9lo6ado>2
+!s85 0
+!s108 1446771073.561000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/DataMemory.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/DataMemory.v|
+!s101 -O0
+vDecoder
+ILR1RDWf=kHMMg3Z:ce9NI1
+V@PF46P[QVA6>@_n4`NcTo3
+R1
+R2
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/Decoder.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/Decoder.v
+L0 1
+R3
+r1
+31
+R4
+R5
+n@decoder
+!i10b 1
+!s100 FoIzfi9>BBFF1Z7:hY5TS1
+!s85 0
+!s108 1446771073.788000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/Decoder.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/Decoder.v|
+!s101 -O0
+vFourPortMux
+IO5hdPDIof@BmO?T0D65O;1
+Vcl>ZncVea`Hg@T1zRRJ<31
+R1
+R2
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/FourPortMux.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/FourPortMux.v
+L0 1
+R3
+r1
+31
+R4
+R5
+n@four@port@mux
+!i10b 1
+!s100 :oOnfLK[>W1oZTjK3HF352
+!s85 0
+!s108 1446771073.986000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/FourPortMux.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/FourPortMux.v|
+!s101 -O0
+vInstMemory
+Igf:PWMTM?[jB]<3LYU=4Y2
+VUJYb>IZO9F_mPNHYd`^832
+R1
+R2
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/InstMemory.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/InstMemory.v
+L0 1
+R3
+r1
+31
+R4
+R5
+n@inst@memory
+!i10b 1
+!s100 ncef?f[e^]=6gi2LWnc192
+!s85 0
+!s108 1446771074.197000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/InstMemory.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/InstMemory.v|
+!s101 -O0
+vMemoryMappedIO
+!i10b 1
+!s100 kD`I3XV`0K8kEMP=WV2DO0
+IXgI36>OVmh7hemCY0Ggkj0
+VVAQzenDe8^L`N2gAj7k`H2
+R1
+R2
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/MemoryMappedIO.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/MemoryMappedIO.v
+L0 1
+R3
+r1
+!s85 0
+31
+!s108 1446771074.435000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/MemoryMappedIO.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/MemoryMappedIO.v|
+!s101 -O0
+R4
+R5
+n@memory@mapped@i@o
+vPLL
+IfMOW5_MePHz>g>OffkVG@0
+VcRJBAi;iBH4]@Zh9O[[o60
+R1
+R6
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/PLL.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/PLL.v
+L0 39
+R3
+r1
+31
+R4
+n@p@l@l
+!i10b 1
+!s100 `59R^[Y];97bc5H_Wh5?h0
+!s85 0
+!s108 1446771072.829000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/PLL.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/PLL.v|
+!s101 -O0
+!s92 -vlog01compat -work work {+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220} -O0
+vSCProcController
+IaUIDQJaM<MMk9XUOVHAl@2
+V5:cPJ?M5G`]<5hQHQ8@9E0
+R1
+w1446769439
+8D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/SCProcController.v
+FD:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/SCProcController.v
+L0 1
+R3
+r1
+31
+R4
+n@s@c@proc@controller
+R5
+!i10b 1
+!s100 YAkMX5i]MA]e]C_lTOm3g1
+!s85 0
+!s108 1446771072.473000
+!s107 D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/SCProcController.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files|D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/SCProcController.v|
+!s101 -O0

@@ -1,4 +1,5 @@
-module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);input  [9:0] SW;
+module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
+	input  [9:0] SW;
 	input  [3:0] KEY;
 	input  CLOCK_50;
 	output [9:0] LEDR;
@@ -16,7 +17,7 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);input  [9
 	parameter ADDR_LEDR 					 	= 32'hF0000004;
 	parameter ADDR_LEDG 					 	= 32'hF0000008;
   
-	parameter IMEM_INIT_FILE				= "Test2.mif";
+	parameter IMEM_INIT_FILE				= "Sorter2.mif";
 	parameter IMEM_ADDR_BIT_WIDTH 		= 11;
 	parameter IMEM_DATA_BIT_WIDTH 		= INST_BIT_WIDTH;
 	parameter IMEM_PC_BITS_HI     		= IMEM_ADDR_BIT_WIDTH + 2;
@@ -37,13 +38,36 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);input  [9
 	wire pcWrtEn = 1'b1;
 	wire[DBITS - 1: 0] pcIn;
 	wire[DBITS - 1: 0] pcOut;
-  
-	// This PC instantiation is your starting point
-	Register #(.BIT_WIDTH(DBITS), .RESET_VALUE(START_PC)) pc (clk, reset, pcWrtEn, pcIn, pcOut);
 
+	 
+	// Create ALU unit
+	wire[DBITS-1:0] FWD_DATA1, FWD_DATA2;
+	wire[DBITS - 1:0] ARG2;
+	wire[DBITS - 1:0] ALU_OUT;
+	wire[4:0] aluSel;
+	ALU alu(ALU_OUT, FWD_DATA1, ARG2, aluSel);
+	
+	// Registers used to perform pipelining
+	reg WR_REG_EN;
+	reg[REG_INDEX_BIT_WIDTH - 1:0] WR_RD;
+	reg[DBITS - 1:0] WR_ALU_OUT, WR_NEXT_PC;
+	reg[1:0] WR_regWrSel;
+	
 	// Create instruction memeory
 	wire[IMEM_DATA_BIT_WIDTH - 1: 0] instWord;
 	InstMemory #(IMEM_INIT_FILE, IMEM_ADDR_BIT_WIDTH, IMEM_DATA_BIT_WIDTH) instMem (pcOut[IMEM_PC_BITS_HI - 1: IMEM_PC_BITS_LO], instWord);
+	
+	// Control logic
+	wire regSel;
+	wire REG_EN;
+	wire MEM_EN;
+	wire[1:0] pcSel, argSel, regWrSel;
+	Decoder decoder(instWord[3:0], instWord[7:4], ALU_OUT[0], regSel, regWrSel, argSel, aluSel, pcSel, REG_EN, MEM_EN);
+	
+	 
+	// This PC instantiation is your starting point
+	Register #(.BIT_WIDTH(DBITS), .RESET_VALUE(START_PC)) pc (clk, reset, pcWrtEn, pcIn, pcOut);
+
   
 	// Put the code for getting opcode1, rd, rs, rt, imm, etc. here
 	wire[REG_INDEX_BIT_WIDTH - 1:0] RS1, RS2;
@@ -63,23 +87,18 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);input  [9
 	AsyncRegister registers(clk, WR_RD, RS1, RS2, REG_IN, WR_REG_EN, DATA1, DATA2);
 	
 	// Forward the first register if necessary
-	wire[DBITS-1:0] FWD_DATA1, FWD_DATA2;
 	assign FWD_DATA1 = WR_REG_EN & (RS1 == WR_RD) ? REG_IN : DATA1;
 	assign FWD_DATA2 = WR_REG_EN & (RS2 == WR_RD) ? REG_IN : DATA2;
 
 	// Switch between the immediate and DATA2
-	wire[DBITS - 1:0] ARG2;
 	FourPortMux #(DBITS) argMux(argSel, FWD_DATA2, immExt, immShift, 0, ARG2);
-  
-	// Create ALU unit
-	wire[DBITS - 1:0] ALU_OUT;
-	ALU alu(ALU_OUT, FWD_DATA1, ARG2, aluSel);
+ 
 	
-	// Registers used to perform pipelining
-	reg WR_REG_EN;
-	reg[REG_INDEX_BIT_WIDTH - 1:0] WR_RD;
-	reg[DBITS - 1:0] WR_ALU_OUT, WR_NEXT_PC;
-	reg[1:0] WR_regWrSel;
+	// Generate the next program counter
+	wire[DBITS - 1:0] nextPC, nextBranch;
+	assign nextPC = pcOut + 4;
+	assign nextBranch = nextPC + immShift;
+	FourPortMux #(DBITS) pcMux(pcSel, nextPC, nextBranch, ALU_OUT, 0, pcIn);
 	
 	// Delay RD and REG_EN by one cycle
 	always @(posedge clk) begin
@@ -106,14 +125,13 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);input  [9
 			MEM_OUT <= MEM_OUT_TMP;
 	end
 	
-	
+	wire[15:0] HEXTMP;
 	// Memory Mapped Outputs
 	MemoryMappedIO #(ADDR_HEX, 16) ioHex(clk, MEM_EN, ALU_OUT, FWD_DATA2, HEXTMP);
 	MemoryMappedIO #(ADDR_LEDR, 10) ioLedR(clk, MEM_EN, ALU_OUT, FWD_DATA2, LEDR);
 	MemoryMappedIO #(ADDR_LEDG, 8) ioLedG(clk, MEM_EN, ALU_OUT, FWD_DATA2, LEDG);
 	
 	// Convert the binary to 7-seg
-	wire[15:0] HEXTMP;
 	SevenSeg hexConv3(HEXTMP[15:12], HEX3);
 	SevenSeg hexConv2(HEXTMP[11:8], HEX2);
 	SevenSeg hexConv1(HEXTMP[7:4], HEX1);
@@ -122,18 +140,6 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);input  [9
 	// Mux to switch register input between the ALU, the PC counter, and the memory
 	FourPortMux #(DBITS) regInMux(WR_regWrSel, WR_ALU_OUT, MEM_OUT, WR_NEXT_PC, 0, REG_IN);
   
-	// Generate the next program counter
-	wire[DBITS - 1:0] nextPC, nextBranch;
-	assign nextPC = pcOut + 4;
-	assign nextBranch = nextPC + immShift;
-	FourPortMux #(DBITS) pcMux(pcSel, nextPC, nextBranch, ALU_OUT, 0, pcIn);
     
-	// Control logic
-	wire regSel;
-	wire REG_EN;
-	wire MEM_EN;
-	wire[4:0] aluSel;
-	wire[1:0] pcSel, argSel, regWrSel;
-	Decoder decoder(instWord[3:0], instWord[7:4], ALU_OUT[0], regSel, regWrSel, argSel, aluSel, pcSel, REG_EN, MEM_EN);
 	
 endmodule

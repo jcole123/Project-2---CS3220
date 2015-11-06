@@ -10,20 +10,57 @@
 # ** Warning: Copied D:\altera\13.0sp1\modelsim_ase\win32aloem/../modelsim.ini to modelsim.ini.
 #          Updated modelsim.ini.
 # 
-# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220 {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v}
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/SCProcController.v}
 # Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
-# -- Compiling module Project2
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(95): 'HEXTMP' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(105): 'nextPC' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(111): 'regSel' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(112): 'regWrSel' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(113): 'argSel' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(114): 'REG_EN' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(115): 'MEM_EN' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(116): 'aluSel' already declared in this scope (Project2).
-# ** Error: D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v(117): 'pcSel' already declared in this scope (Project2).
-# ** Error: D:/altera/13.0sp1/modelsim_ase/win32aloem/vlog failed.
-# Error in macro ./Debug_run_msim_rtl_verilog.do line 8
-# D:/altera/13.0sp1/modelsim_ase/win32aloem/vlog failed.
-#     while executing
-# "vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220 {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Project2.v}"
+# -- Compiling module SCProcController
+# 
+# Top level modules:
+# 	SCProcController
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220 {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/PLL.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module PLL
+# 
+# Top level modules:
+# 	PLL
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/ALU2.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module ALU
+# 
+# Top level modules:
+# 	ALU
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/AsyncRegister.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module AsyncRegister
+# 
+# Top level modules:
+# 	AsyncRegister
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/DataMemory.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module DataMemory
+# 
+# Top level modules:
+# 	DataMemory
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/Decoder.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module Decoder
+# 
+# Top level modules:
+# 	Decoder
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/FourPortMux.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module FourPortMux
+# 
+# Top level modules:
+# 	FourPortMux
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/InstMemory.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module InstMemory
+# 
+# Top level modules:
+# 	InstMemory
+# vlog -vlog01compat -work work +incdir+D:/Dropbox/Fall\ 2015/CS\ 3220/Project-2---CS3220/Verilog\ Files {D:/Dropbox/Fall 2015/CS 3220/Project-2---CS3220/Verilog Files/MemoryMappedIO.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module MemoryMappedIO
+# 
+# Top level modules:
+# 	MemoryMappedIO
