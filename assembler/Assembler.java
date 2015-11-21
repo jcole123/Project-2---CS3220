@@ -114,7 +114,7 @@ public class Assembler {
 		RESERVED.add("SW");
 		RESERVED.add("LW");
 		RESERVED.add("BR");
-		RESERVED.add("NOT");
+		RESERVED.add("NOT");  
 		RESERVED.add("BLE");
 		RESERVED.add("BGE");
 		RESERVED.add("CALL");

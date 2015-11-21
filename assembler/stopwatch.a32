@@ -1,0 +1,143 @@
+; Justin Cole & Michael Chen Project 4
+
+
+;TODO: not sure if I need to handle countdown logic (decrementing seconds/minutes) or if that can be taken care of in verilog
+
+; Addresses for I/O
+.NAME 	IOBASE= 0xF0000000
+.NAME	OFSHEX= 0x00000000
+.NAME	OFSLEDR=0x00000004
+.NAME	OFSLEDG=0x00000008
+.NAME	OFSKEY =0x00000010 ;KDATA
+.NAME 	KCTRL  =0x00000110 ;KCTRL
+.NAME	OFSSW  =0x00000014 ;SDATA
+.NAME 	SCTRL  =0x00000114 ;SCTRL
+.NAME 	TCNT   =0x00000020 ;TCNT
+.NAME 	TLIM   =0x00000024 ;TLIM
+.NAME 	TCTL   =0x00000120 ;TCTL 
+
+
+
+;a0 stores state of timer. 00 = seconds, 01 = minutes, 11 = set, 100 = running 
+;a1 read from keys
+;a2 store seconds
+;a3 store current HEX value
+;t0 always equal to zero 
+;t1 compare key values
+;s0 
+;s1 add delay to timer
+;s2
+
+
+.ORIG 0x40
+Set:
+	mvhi	gp,IOBASE 
+	andi 	a0, a0, 0
+	andi 	a1, a1, 0
+	andi 	t0, t0, 0
+	andi 	t1, t1, 0
+	andi	s2, s2, 0
+	addi	s1, s1, 2
+
+
+Wait0:   ;wait for key to be released
+	lw		a1, OFSKEY(gp) ;check key
+	bne		t0, a1, Wait0
+
+
+SetSeconds:
+	andi 	a0, a0, 0
+	addi	a0, a0, 1
+	sw 		a0, OFSLEDG(gp) ; store state in LEDG
+	lw		a3, OFSSW(gp) ; get value from switches
+	andi 	a3, a3, 0x00FF ; mask it - only care about first 8 switches
+	sw		a3,OFSHEX(gp) ; store switch value in HEX
+	lw		a1, OFSKEY(gp) ;check key
+	andi	t1, t1, 0
+	addi	t1, t1, 2 ;if KEY[1], go to minutes
+	andi 	a2, a2, 0
+	add 	a2, a2, a3
+	bne		t1, a1, SetSeconds
+
+Wait1:   ;wait for key to be released
+	lw		a1, OFSKEY(gp) ;check key
+	bne		t0, a1, Wait1
+
+SetMinutes:
+	andi 	a0, a0, 0
+	addi	a0, a0, 2
+	sw		a0, OFSLEDG(gp) ;store state on ledg
+	lw		a3, OFSSW(gp) ; get value from switches
+	andi 	a3, a3, 0x00FF
+	add 	a3, a3, a3
+	add 	a3, a3, a3
+	add 	a3, a3, a3
+	add 	a3, a3, a3	
+	add 	a3, a3, a3
+	add 	a3, a3, a3
+	add 	a3, a3, a3
+	add 	a3, a3, a3 ;shift
+	or 		a3, a3, a2
+	sw		a3,OFSHEX(gp) ; store switch value in HEX
+	lw		a1, OFSKEY(gp) ;check key
+	andi	t1, t1, 0
+	addi	t1, t1, 1 ;if KEY[0], reset
+	beq 	t1, a1, Set
+	addi	t1, t1, 1 ;if KEY[1], TimeSet
+	bne		t1, a1, SetMinutes
+	
+
+Wait2:   ;wait for key to be released
+	lw		a1, OFSKEY(gp) ;check key
+	bne		t0, a1, Wait2
+
+TimeSet:
+	andi 	a0, a0, 0
+	addi 	a0, a0, 3 ; increment state to 11
+	sw		a0, OFSLEDG(gp) ;store state on ledg
+	lw		a1, OFSKEY(gp) ;check key
+	andi	t1, t1, 0
+	addi	t1, t1, 4 ;if KEY[0] or KEY[1], go back to initial state
+	beq 	t0, a1, TimeSet ; KEY = 0, stay in state
+	bne		a1, t1, Set
+
+	
+Wait3:   ;wait for key to be released
+	lw		a1, OFSKEY(gp) ;check key
+	bne		t0, a1, Wait3
+
+CountDown:
+	sw 		t0, OFSLEDG(gp)
+	subi 	a3, a3, 1
+	addi 	s1, s1, 10000 
+	jal 	ra, Wait(t0) ; waste some time
+	sw 		a3, OFSHEX(gp) ;decrement hex value
+	lw		a1, OFSKEY(gp) ;check key
+	andi	t1, t1, 0
+	addi	t1, t1, 4 ;if KEY[2], pause
+	beq 	a1, t1, Wait2
+	bne 	t0, a3, CountDown
+
+Wait4:   ;wait for key to be released
+	lw		a1, OFSKEY(gp) ;check key
+	bne		t0, a1, Wait4	
+
+Finished:
+	sw 		s2, OFSLEDR(gp) 
+	not 	s2, s2
+	subi 	a3, a3, 1
+	addi 	s1, s1, 10000 
+	jal 	ra, Wait(t0) ; waste some time
+	lw		a1, OFSKEY(gp) ;check key
+	andi	t1, t1, 0
+	addi	t1, t1, 1 ;if KEY[2], pause
+	bne 	a1, t1, Finished
+	beq 	t0, t0, Set
+
+
+Wait:
+	subi 	s1, s1, 1
+	bne 	s1, t0, Wait
+	ret
+	
+
