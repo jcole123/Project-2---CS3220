@@ -1,7 +1,6 @@
 ; Justin Cole & Michael Chen Project 4
 
 
-;TODO: not sure if I need to handle countdown logic (decrementing seconds/minutes) or if that can be taken care of in verilog
 
 ; Addresses for I/O
 .NAME 	IOBASE= 0xF0000000
@@ -36,8 +35,12 @@ Set:
 	andi 	a1, a1, 0
 	andi 	t0, t0, 0
 	andi 	t1, t1, 0
+	andi 	s0, s0, 0
 	andi	s2, s2, 0
+	andi 	rv, rv, 0
 	addi	s1, s1, 2
+
+	sw 		t0, OFSLEDR(gp)
 
 
 Wait0:   ;wait for key to be released
@@ -108,9 +111,11 @@ Wait3:   ;wait for key to be released
 
 CountDown:
 	sw 		t0, OFSLEDG(gp)
+	beq 	a3, t0, Finished
 	subi 	a3, a3, 1
 	addi 	s1, s1, 10000 
 	jal 	ra, Wait(t0) ; waste some time
+	jal 	ra, CheckSeconds(t0)
 	sw 		a3, OFSHEX(gp) ;decrement hex value
 	lw		a1, OFSKEY(gp) ;check key
 	andi	t1, t1, 0
@@ -138,6 +143,58 @@ Finished:
 Wait:
 	subi 	s1, s1, 1
 	bne 	s1, t0, Wait
+	ret
+
+CheckSeconds: 
+	sw 		t0, OFSLEDG(gp)
+	andi 	a2, a3, 0x00FF ; check seconds
+	
+CheckMax: 		; check for xxFF
+	addi 	s2, s2, 0x00FF
+	bne 	s2, a2, CheckOnes
+	not 	s2, s2 ; s2 = 0xFF00
+	andi 	a2, a2, 0 
+	addi 	a2, a2, 0x0059 ; seconds = 59
+	and 	a3, a3, s2 ; get minutes
+	or 		a3, a3, a2
+CheckOnes:		;check for xxxF
+	andi 	s2, s2, 0 
+	addi 	s2, s2, 0x000F
+	andi	fp, fp, 0
+	addi 	fp, fp, 0x000F
+	and 	fp, fp, a2 ; get seconds in one's place
+	bne 	s2, fp, CheckOnesMinutes
+	andi	fp, fp, 0
+	addi 	fp, fp, 0x0009
+	andi 	a2, a2, 0x00F0
+	or 		a2, a2, fp
+	
+CheckOnesMinutes: 	;check for xFxx
+	andi 	s2, s2, 0
+	addi  	s2, s2, 0x0F00 
+	andi 	fp, fp, 0
+	andi 	fp, a3, 0x0F00
+	bne 	fp, s2, Fin
+	;andi 	fp, a3, 0x7000 ;a3 stores 10's component of minutes	
+	andi	s2, s2, 0
+	addi 	s2, s2, 0x0FFF
+	sw 		fp, OFSLEDG(gp) 
+	not 	s2, s2 ; s2 = 0xF000
+	andi 	a3, a3, 0x7000 ; get minutes
+	andi 	fp, fp, 0 
+	;add 	fp, fp, s2
+	addi 	fp, fp, 0x0900
+	
+	or 		a3, a3, fp
+	;and 	a3, a3, fp
+	;add		a3, a3, fp	
+
+Fin:
+	andi 	s2, s2, 0 
+	addi 	s2, s2, 0x00FF
+	not 	s2, s2 ; s2 = 0xFF00
+	and 	a3, a3, s2	
+	or 		a3, a3, a2
 	ret
 	
 
