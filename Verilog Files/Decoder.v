@@ -30,7 +30,8 @@ module Decoder(opcode, func, aluVal, regSel, regWrSel, argSel, aluSel, pcSel, re
 	parameter PC_IMM = 2'b01;
 	parameter PC_ALU = 2'b10;
 	
-	input[3:0] opcode, func, aluVal;
+	input aluVal;
+	input[3:0] opcode, func;
 	output reg[4:0] aluSel;
 	output reg[1:0] pcSel, regWrSel, argSel;
 	output reg regSel, regEn, memEn;

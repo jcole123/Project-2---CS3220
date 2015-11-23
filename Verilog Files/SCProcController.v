@@ -39,7 +39,6 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	wire[DBITS - 1: 0] pcIn;
 	wire[DBITS - 1: 0] pcOut;
 
-	 
 	// Create ALU unit
 	wire[DBITS-1:0] FWD_DATA1, FWD_DATA2;
 	wire[DBITS - 1:0] ARG2;
@@ -48,9 +47,9 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	ALU alu(ALU_OUT, FWD_DATA1, ARG2, aluSel);
 	
 	// Registers used to perform pipelining
-	reg WR_REG_EN;
+	reg WR_REG_EN, WR_MEM_EN;
 	reg[REG_INDEX_BIT_WIDTH - 1:0] WR_RD;
-	reg[DBITS - 1:0] WR_ALU_OUT, WR_NEXT_PC;
+	reg[DBITS - 1:0] WR_ALU_OUT, WR_NEXT_PC, WR_MEM_IN;
 	reg[1:0] WR_regWrSel;
 	
 	// Create instruction memeory
@@ -63,11 +62,9 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	wire MEM_EN;
 	wire[1:0] pcSel, argSel, regWrSel;
 	Decoder decoder(instWord[3:0], instWord[7:4], ALU_OUT[0], regSel, regWrSel, argSel, aluSel, pcSel, REG_EN, MEM_EN);
-	
 	 
 	// This PC instantiation is your starting point
 	Register #(.BIT_WIDTH(DBITS), .RESET_VALUE(START_PC)) pc (clk, reset, pcWrtEn, pcIn, pcOut);
-
   
 	// Put the code for getting opcode1, rd, rs, rt, imm, etc. here
 	wire[REG_INDEX_BIT_WIDTH - 1:0] RS1, RS2;
@@ -92,7 +89,6 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 
 	// Switch between the immediate and DATA2
 	FourPortMux #(DBITS) argMux(argSel, FWD_DATA2, immExt, immShift, 0, ARG2);
- 
 	
 	// Generate the next program counter
 	wire[DBITS - 1:0] nextPC, nextBranch;
@@ -107,29 +103,30 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 		WR_ALU_OUT <= ALU_OUT;
 		WR_regWrSel <= regWrSel;
 		WR_NEXT_PC <= nextPC;
-	end
-
-	// Initialize the data memory
-	// Note that since the memory module is positive edge triggered internally, MEM_EN does not need to be delayed
-	wire[DBITS - 1:0] MEM_OUT_TMP;
-	DataMemory #(IMEM_INIT_FILE) dataMem (clk, ALU_OUT[IMEM_PC_BITS_HI - 1: IMEM_PC_BITS_LO], MEM_OUT_TMP, FWD_DATA2, MEM_EN & ~ALU_OUT[31]);
-   
-	// Memory Mapped Inputs
-	reg [DBITS-1:0] MEM_OUT;
-	always @(*) begin
-		if (WR_ALU_OUT == ADDR_KEY)
-			MEM_OUT <= {28'h0, ~KEY};
-		else if (WR_ALU_OUT == ADDR_SW)
-			MEM_OUT <= {22'h0, SW};
-		else
-			MEM_OUT <= MEM_OUT_TMP;
+		WR_MEM_EN <= MEM_EN;
+		WR_MEM_IN <= FWD_DATA2;
 	end
 	
+	// Connect the processor to the bus
+	assign MEM_BUS = WR_MEM_EN ? WR_MEM_IN : {DBITS{1'bz}};
+
+	// Connect the memory to the bus
+	DataMemory #(IMEM_INIT_FILE, IMEM_PC_BITS_HI, IMEM_PC_BITS_LO) dataMem (clk, WR_ALU_OUT, MEM_BUS, WR_MEM_EN);
+   
+//	// Memory Mapped Inputs
+	wire [DBITS-1:0] MEM_BUS;
+	MemoryMappedInputs #(ADDR_KEY, 4) keys(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, ~KEY);
+	MemoryMappedInputs #(ADDR_SW, 10) switches(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, SW);
+	
 	wire[15:0] HEXTMP;
+	
 	// Memory Mapped Outputs
-	MemoryMappedIO #(ADDR_HEX, 16) ioHex(clk, MEM_EN, ALU_OUT, FWD_DATA2, HEXTMP);
-	MemoryMappedIO #(ADDR_LEDR, 10) ioLedR(clk, MEM_EN, ALU_OUT, FWD_DATA2, LEDR);
-	MemoryMappedIO #(ADDR_LEDG, 8) ioLedG(clk, MEM_EN, ALU_OUT, FWD_DATA2, LEDG);
+  	MemoryMappedIO #(ADDR_HEX, 16) ioHex(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, HEXTMP);
+  	MemoryMappedIO #(ADDR_LEDR, 10) ioLedR(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, LEDR);
+  	MemoryMappedIO #(ADDR_LEDG, 8) ioLedG(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, LEDG);
+	
+	// Timer
+	Timer timer(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS);
 	
 	// Convert the binary to 7-seg
 	SevenSeg hexConv3(HEXTMP[15:12], HEX3);
@@ -138,8 +135,6 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	SevenSeg hexConv0(HEXTMP[3:0], HEX0);
   
 	// Mux to switch register input between the ALU, the PC counter, and the memory
-	FourPortMux #(DBITS) regInMux(WR_regWrSel, WR_ALU_OUT, MEM_OUT, WR_NEXT_PC, 0, REG_IN);
-  
-    
+	FourPortMux #(DBITS) regInMux(WR_regWrSel, WR_ALU_OUT, MEM_BUS, WR_NEXT_PC, 0, REG_IN);
 	
 endmodule
