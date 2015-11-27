@@ -113,10 +113,14 @@ module SCProcController(SW,KEY,LEDR,LEDG,HEX0,HEX1,HEX2,HEX3,CLOCK_50);
 	// Connect the memory to the bus
 	DataMemory #(IMEM_INIT_FILE, IMEM_PC_BITS_HI, IMEM_PC_BITS_LO) dataMem (clk, WR_ALU_OUT, MEM_BUS, WR_MEM_EN);
    
-//	// Memory Mapped Inputs
+	// Debounce the switch
+	wire[9:0] SW_DB;
+	Debouncer #(10) debouncer(clk, SW, SW_DB);
+	
+	// Memory Mapped Inputs
 	wire [DBITS-1:0] MEM_BUS;
-	MemoryMappedInputs #(ADDR_KEY, 4) keys(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, ~KEY);
-	MemoryMappedInputs #(ADDR_SW, 10) switches(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, SW);
+	MemoryMappedInputs #(ADDR_KEY, 4) keys(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, ~KEY, WR_regWrSel == 2'b01);
+	MemoryMappedInputs #(ADDR_SW, 10) switches(clk, WR_MEM_EN, WR_ALU_OUT, MEM_BUS, SW_DB, WR_regWrSel == 2'b01);
 	
 	wire[15:0] HEXTMP;
 	

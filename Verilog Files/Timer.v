@@ -44,9 +44,6 @@ module Timer(clk, wrEn, addr, bus);
 			overrun <= bus[2] ? overrun : 1'b0;
 			ie <= bus[8];
 		end
-	
-		// Reset ready on ready
-		if (TCTL_EN & ~wrEn) ready <= 1'b0;
 	end
 	
 endmodule

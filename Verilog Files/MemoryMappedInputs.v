@@ -1,4 +1,4 @@
-module MemoryMappedInputs(clk, writeEn, addr, bus, device);
+module MemoryMappedInputs(clk, writeEn, addr, bus, device, isRead);
 	// The address of the data register
 	parameter ADDRESS_DATA;
 	
@@ -8,7 +8,7 @@ module MemoryMappedInputs(clk, writeEn, addr, bus, device);
 	// The address of the control register
 	parameter ADDRESS_CTRL = ADDRESS_DATA + 32'h100;
 	
-	input clk, writeEn;
+	input clk, writeEn, isRead;
 	input[OUTPUT_WIDTH-1:0] device;
 	input[31:0]	addr;
 	inout[31:0] bus;
@@ -43,6 +43,6 @@ module MemoryMappedInputs(clk, writeEn, addr, bus, device);
 		end
 		
 		// If reading from data, clear ready
-		if (enData & ~writeEn) ready <= 1'b0;
+		if (enData & ~writeEn & isRead) ready <= 1'b0;
 	end
 endmodule

@@ -39,6 +39,9 @@ Set:
 	andi	s2, s2, 0
 	andi 	rv, rv, 0
 	addi	s1, s1, 2
+	
+	addi	a0, a0, 1000
+	sw 		a0, TLIM(gp) ; Set the timer limit
 
 	sw 		t0, OFSLEDR(gp)
 
@@ -100,9 +103,12 @@ TimeSet:
 	sw		a0, OFSLEDG(gp) ;store state on ledg
 	lw		a1, OFSKEY(gp) ;check key
 	andi	t1, t1, 0
-	addi	t1, t1, 4 ;if KEY[0] or KEY[1], go back to initial state
-	beq 	t0, a1, TimeSet ; KEY = 0, stay in state
-	bne		a1, t1, Set
+	
+	addi	t1, t1, 1
+	beq		a1, t1, Set		;if Reset then go to set
+	
+	addi	t1, t1, 3
+	bne		a1, t1, TimeSet	;if button=startm continue, else loop
 
 	
 Wait3:   ;wait for key to be released
@@ -113,88 +119,63 @@ CountDown:
 	sw 		t0, OFSLEDG(gp)
 	beq 	a3, t0, Finished
 	subi 	a3, a3, 1
-	addi 	s1, s1, 10000 
 	jal 	ra, Wait(t0) ; waste some time
 	jal 	ra, CheckSeconds(t0)
 	sw 		a3, OFSHEX(gp) ;decrement hex value
-	lw		a1, OFSKEY(gp) ;check key
-	andi	t1, t1, 0
-	addi	t1, t1, 4 ;if KEY[2], pause
-	beq 	a1, t1, Wait2
 	bne 	t0, a3, CountDown
 
-Wait4:   ;wait for key to be released
-	lw		a1, OFSKEY(gp) ;check key
-	bne		t0, a1, Wait4	
-
 Finished:
-	sw 		s2, OFSLEDR(gp) 
-	not 	s2, s2
-	subi 	a3, a3, 1
-	addi 	s1, s1, 10000 
-	jal 	ra, Wait(t0) ; waste some time
-	lw		a1, OFSKEY(gp) ;check key
+	sw		t0, TCTL(gp)	;	Reset the timer
+	not 	a3, a3			;	Change the Led state
+	sw 		a3, OFSLEDR(gp) 
+FinishedLoop:
+	lw		a1, OFSKEY(gp) 	;	Check the keys
 	andi	t1, t1, 0
-	addi	t1, t1, 1 ;if KEY[2], pause
-	bne 	a1, t1, Finished
-	beq 	t0, t0, Set
+	addi	t1, t1, 1 		;	If the reset key is pressed, restart
+	beq 	a1, t1, Set
+	
+	lw 		s1, TCTL(gp)	;	Check if it's time to change the LED
+	beq		t0, s1, FinishedLoop
+	beq		t0, t0, Finished	;Change the color
 
 
 Wait:
-	subi 	s1, s1, 1
-	bne 	s1, t0, Wait
+	sw		t0, TCTL(gp)	;	Reset the timer
+WaitLoop:
+	lw		a1, OFSKEY(gp) 	;	Check Reset Button
+	andi	t1, t1, 0
+	addi	t1, t1, 1 
+	beq 	a1, t1, set	   	;	If KEY[0], reset
+	addi	t1, t1, 3 		
+	beq 	a1, t1, Wait2	;	if KEY[2], pause
+	lw 		s1, TCTL(gp)
+	beq		t0, s1, WaitLoop
 	ret
 
 CheckSeconds: 
-	sw 		t0, OFSLEDG(gp)
-	andi 	a2, a3, 0x00FF ; check seconds
-	
-CheckMax: 		; check for xxFF
-	addi 	s2, s2, 0x00FF
-	bne 	s2, a2, CheckOnes
-	not 	s2, s2 ; s2 = 0xFF00
-	andi 	a2, a2, 0 
-	addi 	a2, a2, 0x0059 ; seconds = 59
-	and 	a3, a3, s2 ; get minutes
-	or 		a3, a3, a2
-CheckOnes:		;check for xxxF
-	andi 	s2, s2, 0 
+	andi 	a2, a3, 0x000F 	;	Check seconds
+	andi	s2, s2, 0
 	addi 	s2, s2, 0x000F
-	andi	fp, fp, 0
-	addi 	fp, fp, 0x000F
-	and 	fp, fp, a2 ; get seconds in one's place
-	bne 	s2, fp, CheckOnesMinutes
-	andi	fp, fp, 0
-	addi 	fp, fp, 0x0009
-	andi 	a2, a2, 0x00F0
-	or 		a2, a2, fp
+	bne		a2,	s2,	CheckTens
+	andi 	a3, a3, -16 	; 	Remove the seconds (0xFFF0 == -16)
+	addi 	a3, a3, 0x0009 	; 	Seconds = x9
+	
+CheckTens:
+	andi 	a2, a3, 0x00F0 	;	Check 10's seconds
+	andi	s2, s2, 0
+	addi 	s2, s2, 0x00F0
+	bne		a2,	s2,	CheckOnesMinutes
+	andi 	a3, a3, -241 	; 	Remove the seconds (0xFF0F == -241)
+	addi 	a3, a3, 0x0050 	; 	Seconds = 5x
 	
 CheckOnesMinutes: 	;check for xFxx
-	andi 	s2, s2, 0
-	addi  	s2, s2, 0x0F00 
-	andi 	fp, fp, 0
-	andi 	fp, a3, 0x0F00
-	bne 	fp, s2, Fin
-	;andi 	fp, a3, 0x7000 ;a3 stores 10's component of minutes	
+	andi 	a2, a3, 0x0F00 	;	Check seconds
 	andi	s2, s2, 0
-	addi 	s2, s2, 0x0FFF
-	sw 		fp, OFSLEDG(gp) 
-	not 	s2, s2 ; s2 = 0xF000
-	andi 	a3, a3, 0x7000 ; get minutes
-	andi 	fp, fp, 0 
-	;add 	fp, fp, s2
-	addi 	fp, fp, 0x0900
-	
-	or 		a3, a3, fp
-	;and 	a3, a3, fp
-	;add		a3, a3, fp	
-
+	addi 	s2, s2, 0x0F00
+	bne		a2,	s2,	Fin
+	andi 	a3, a3, -3841 	; 	Remove the seconds (0xF0FF == -3841)
+	addi 	a3, a3, 0x0900
 Fin:
-	andi 	s2, s2, 0 
-	addi 	s2, s2, 0x00FF
-	not 	s2, s2 ; s2 = 0xFF00
-	and 	a3, a3, s2	
-	or 		a3, a3, a2
 	ret
 	
 
