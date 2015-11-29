@@ -122,6 +122,11 @@ CountDown:
 	sw 		a3, OFSHEX(gp) ;decrement hex value
 	bne 	t0, a3, CountDown
 
+HalfSecond: 	
+	andi 	a0, a0, 0
+	addi 	a0, a0, 500 ; LEDR should turn on every half second
+	sw 		a0, TLIM(gp)	; the only way to exit the finished state is to reset, so it should always go back to 1000 for the countdown
+
 Finished:
 	sw		t0, TCTL(gp)	;	Reset the timer
 	not 	a3, a3			;	Change the Led state
@@ -131,7 +136,6 @@ FinishedLoop:
 	andi	t1, t1, 0
 	addi	t1, t1, 1 		;	If the reset key is pressed, restart
 	beq 	a1, t1, Set
-	
 	lw 		s1, TCTL(gp)	;	Check if it's time to change the LED
 	beq		t0, s1, FinishedLoop
 	beq		t0, t0, Finished	;Change the color
