@@ -105,7 +105,9 @@ TimeSet:
 	andi	t1, t1, 0
 	addi	t1, t1, 1
 	beq		a1, t1, Set		;if Reset then go to set
-	addi	t1, t1, 3
+	addi	t1, t1, 1 ; check for KEY[1] to go back to SetSeconds
+	beq		a1, t1, Set		
+	addi	t1, t1, 2
 	bne		a1, t1, TimeSet	;if button=startm continue, else loop
 
 	
