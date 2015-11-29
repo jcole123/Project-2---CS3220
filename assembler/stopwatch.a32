@@ -103,10 +103,8 @@ TimeSet:
 	sw		a0, OFSLEDG(gp) ;store state on ledg
 	lw		a1, OFSKEY(gp) ;check key
 	andi	t1, t1, 0
-	
 	addi	t1, t1, 1
 	beq		a1, t1, Set		;if Reset then go to set
-	
 	addi	t1, t1, 3
 	bne		a1, t1, TimeSet	;if button=startm continue, else loop
 
@@ -118,8 +116,8 @@ Wait3:   ;wait for key to be released
 CountDown:
 	sw 		t0, OFSLEDG(gp)
 	beq 	a3, t0, Finished
-	subi 	a3, a3, 1
 	jal 	ra, Wait(t0) ; waste some time
+	subi 	a3, a3, 1
 	jal 	ra, CheckSeconds(t0)
 	sw 		a3, OFSHEX(gp) ;decrement hex value
 	bne 	t0, a3, CountDown
